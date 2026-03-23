@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Inscription - UniRide</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Créer un compte</h1>
+
+        <form id="registerForm">
+            <input type="text" id="nom_utilisateur" placeholder="Nom d'utilisateur" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="mot_de_passe" placeholder="Mot de passe" required>
+            <input type="text" id="nom" placeholder="Nom">
+            <input type="text" id="prenom" placeholder="Prénom">
+            <input type="text" id="telephone" placeholder="Téléphone">
+            <button type="submit" class="btn">S'inscrire</button>
+        </form>
+
+        <p id="message"></p>
+        <a href="/home">Retour</a>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+</body>
+</html>
