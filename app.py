@@ -21,19 +21,37 @@ def home():
     return "Flask is working"
 
 
-@app.route("/users")
+@app.route("/users", methods=["GET"])
 def users():
-    connection = get_connection()
-    cursor = connection.cursor()
-    cursor.execute("SELECT id_utilisateur, nom_utilisateur, email, role, statut, date_creation FROM Utilisateur")
-    result = cursor.fetchall()
-    connection.close()
-    return jsonify(result)
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT id_utilisateur, nom_utilisateur, email, role, statut, date_creation
+            FROM Utilisateur
+        """)
+        result = cursor.fetchall()
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 @app.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Aucune donnée reçue"}), 400
 
     nom_utilisateur = data.get("nom_utilisateur")
     mot_de_passe = data.get("mot_de_passe")
@@ -44,14 +62,19 @@ def register():
     role = data.get("role", "passager")
 
     if not nom_utilisateur or not mot_de_passe or not email:
-        return jsonify({"error": "nom_utilisateur, mot_de_passe et email sont obligatoires"}), 400
+        return jsonify({
+            "error": "nom_utilisateur, mot_de_passe et email sont obligatoires"
+        }), 400
 
     hashed_password = generate_password_hash(mot_de_passe)
 
-    connection = get_connection()
-    cursor = connection.cursor()
+    connection = None
+    cursor = None
 
     try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
         query = """
         INSERT INTO Utilisateur
         (nom_utilisateur, mot_de_passe, nom, prenom, email, telephone, role)
@@ -83,29 +106,42 @@ def register():
         }), 201
 
     except pymysql.err.IntegrityError:
-        return jsonify({"error": "Nom d'utilisateur, email ou téléphone déjà utilisé"}), 409
+        return jsonify({
+            "error": "Nom d'utilisateur, email ou téléphone déjà utilisé"
+        }), 409
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
     finally:
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
 
+    if not data:
+        return jsonify({"error": "Aucune donnée reçue"}), 400
+
     identifiant = data.get("identifiant")
     mot_de_passe = data.get("mot_de_passe")
 
     if not identifiant or not mot_de_passe:
-        return jsonify({"error": "identifiant et mot_de_passe sont obligatoires"}), 400
+        return jsonify({
+            "error": "identifiant et mot_de_passe sont obligatoires"
+        }), 400
 
-    connection = get_connection()
-    cursor = connection.cursor()
+    connection = None
+    cursor = None
 
     try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
         query = """
         SELECT *
         FROM Utilisateur
@@ -138,7 +174,10 @@ def login():
         return jsonify({"error": str(e)}), 500
 
     finally:
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 if __name__ == "__main__":
