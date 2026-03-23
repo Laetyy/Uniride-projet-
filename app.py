@@ -34,6 +34,11 @@ def users():
             FROM Utilisateur
         """)
         result = cursor.fetchall()
+
+        for user in result:
+            if user.get("date_creation"):
+                user["date_creation"] = str(user["date_creation"])
+
         return jsonify(result), 200
 
     except Exception as e:
@@ -211,6 +216,12 @@ def get_trajets():
         """
         cursor.execute(query)
         trajets = cursor.fetchall()
+
+        for trajet in trajets:
+            if trajet.get("date_trajet"):
+                trajet["date_trajet"] = str(trajet["date_trajet"])
+            if trajet.get("heure_trajet"):
+                trajet["heure_trajet"] = str(trajet["heure_trajet"])
 
         return jsonify(trajets), 200
 
