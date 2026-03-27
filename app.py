@@ -2,6 +2,7 @@ import flask
 from routes.auth import auth_bp
 from routes.trajets import trajets_bp
 from routes.reservation import reservation_bp
+from routes.conducteur import conducteur_bp
 
 app = flask.Flask(__name__)
 app.secret_key = 'uniride_secret_key_2026'  # Clé secrète pour les sessions
@@ -10,6 +11,7 @@ app.secret_key = 'uniride_secret_key_2026'  # Clé secrète pour les sessions
 app.register_blueprint(auth_bp)
 app.register_blueprint(trajets_bp)
 app.register_blueprint(reservation_bp)
+app.register_blueprint(conducteur_bp)
 
 
 # 🌐 ROUTES FRONTEND (HTML)

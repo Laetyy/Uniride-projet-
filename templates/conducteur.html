@@ -49,53 +49,78 @@ function renderBecomeDriver() {
         </div>
     `;
 
-    document.getElementById("certificationForm").addEventListener("submit", function (e) {
+    document.getElementById("certificationForm").addEventListener("submit", async function (e) {
         e.preventDefault();
 
-        const demande = {
+        const data = {
+            id_utilisateur: user.id_utilisateur,
             numero_permis: document.getElementById("numero_permis").value,
             modele: document.getElementById("modele").value,
             type_vehicule: document.getElementById("type_vehicule").value,
             couleur: document.getElementById("couleur").value,
             annee: document.getElementById("annee").value,
-            plaque_immatriculation: document.getElementById("plaque_immatriculation").value,
-            statut_certification: "en_attente"
+            plaque_immatriculation: document.getElementById("plaque_immatriculation").value
         };
 
-        localStorage.setItem("demandeConducteur", JSON.stringify(demande));
-        alert("✅ Demande envoyée. En attente de validation.");
-        renderPendingDriver();
+        try {
+            const response = await fetch("/conducteur/demande", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert("✅ Demande envoyée avec succès");
+                renderPendingDriver();
+            } else {
+                alert("❌ " + (result.error || "Erreur"));
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Erreur serveur");
+        }
     });
 }
 
-function renderPendingDriver() {
-    const demande = JSON.parse(localStorage.getItem("demandeConducteur"));
+async function renderPendingDriver() {
+    try {
+        const response = await fetch(`/conducteur/statut/${user.id_utilisateur}`);
+        const result = await response.json();
 
-    container.innerHTML = `
-        <div class="dashboard-card">
-            <h3>Demande en attente</h3>
-            <p>Votre demande de certification a bien été soumise.</p>
-            <p><strong>Statut :</strong> en attente</p>
+        container.innerHTML = `
+            <div class="dashboard-card">
+                <h3>Demande en attente</h3>
+                <p>Votre demande de certification a été soumise.</p>
+                <p><strong>Statut :</strong> ${result.statut || "en_attente"}</p>
+                <p><strong>Permis :</strong> ${result.numero_permis || ""}</p>
 
-            <h4>Informations soumises</h4>
-            <p><strong>Permis :</strong> ${demande?.numero_permis || ""}</p>
-            <p><strong>Véhicule :</strong> ${demande?.modele || ""}</p>
-            <p><strong>Type :</strong> ${demande?.type_vehicule || ""}</p>
-            <p><strong>Couleur :</strong> ${demande?.couleur || ""}</p>
-            <p><strong>Année :</strong> ${demande?.annee || ""}</p>
-            <p><strong>Plaque :</strong> ${demande?.plaque_immatriculation || ""}</p>
+                <button class="btn" id="simulateAccept">Simuler validation admin</button>
+            </div>
+        `;
 
-            <button class="btn" id="simulateAccept">Simuler validation admin</button>
-        </div>
-    `;
+        document.getElementById("simulateAccept").addEventListener("click", async function () {
+            const res = await fetch(`/conducteur/simuler-validation/${user.id_utilisateur}`, {
+                method: "POST"
+            });
 
-    document.getElementById("simulateAccept").addEventListener("click", function () {
-        user.role = "conducteur";
-        localStorage.setItem("user", JSON.stringify(user));
-        localStorage.setItem("conducteurCertifie", "true");
-        alert("✅ Conducteur certifié !");
-        renderDriverDashboard();
-    });
+            const data = await res.json();
+
+            if (res.ok) {
+                user.role = "conducteur";
+                localStorage.setItem("user", JSON.stringify(user));
+                alert("✅ Conducteur validé");
+                renderDriverDashboard();
+            } else {
+                alert("❌ " + (data.error || "Erreur"));
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        container.innerHTML = "<p>Erreur lors du chargement du statut.</p>";
+    }
 }
 
 function renderDriverDashboard() {
@@ -184,9 +209,7 @@ function renderDriverDashboard() {
         try {
             const response = await fetch("/trajets", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(data)
             });
 
@@ -195,6 +218,7 @@ function renderDriverDashboard() {
             if (response.ok) {
                 alert("✅ Trajet publié avec succès");
                 document.getElementById("trajetForm").reset();
+                chargerMesTrajets();
             } else {
                 alert("❌ " + (result.error || "Erreur"));
             }
@@ -202,17 +226,81 @@ function renderDriverDashboard() {
             console.error(error);
             alert("Erreur serveur");
         }
+        chargerMesTrajets();
     });
 }
+async function chargerMesTrajets() {
+    const zone = document.getElementById("mes-trajets");
 
-if (!user) {
-    renderNotConnected();
-} else if (localStorage.getItem("conducteurCertifie") === "true" && user.role === "conducteur") {
-    renderDriverDashboard();
-} else if (localStorage.getItem("demandeConducteur")) {
-    renderPendingDriver();
-} else {
-    renderBecomeDriver();
+    try {
+        const response = await fetch(`/conducteur/trajets/${user.id_utilisateur}`);
+        const trajets = await response.json();
+
+        if (!response.ok) {
+            zone.innerHTML = `<p>Erreur : ${trajets.error}</p>`;
+            return;
+        }
+
+        if (trajets.length === 0) {
+            zone.innerHTML = "<p>Aucun trajet publié pour le moment.</p>";
+            return;
+        }
+
+        zone.innerHTML = "";
+
+        trajets.forEach(trajet => {
+            const card = document.createElement("div");
+            card.className = "trajet-card";
+
+            card.innerHTML = `
+                <h4>${trajet.ville_depart} → ${trajet.ville_arrivee}</h4>
+                <p><strong>Date :</strong> ${trajet.date_trajet}</p>
+                <p><strong>Heure :</strong> ${trajet.heure_trajet}</p>
+                <p><strong>Prix :</strong> ${trajet.prix}$</p>
+                <p><strong>Places :</strong> ${trajet.places_disponibles}</p>
+                <p><strong>Ambiance :</strong> ${trajet.ambiance}</p>
+                <p><strong>Statut :</strong> ${trajet.statut}</p>
+            `;
+
+            zone.appendChild(card);
+        });
+
+    } catch (error) {
+        console.error(error);
+        zone.innerHTML = "<p>Erreur lors du chargement des trajets.</p>";
+    }
 }
+
+async function initConducteurPage() {
+    if (!user) {
+        renderNotConnected();
+        return;
+    }
+
+    if (user.role === "conducteur") {
+        renderDriverDashboard();
+        return;
+    }
+
+    try {
+        const response = await fetch(`/conducteur/statut/${user.id_utilisateur}`);
+        const result = await response.json();
+
+        if (result.statut === "en_attente" || result.statut === "refusee") {
+            renderPendingDriver();
+        } else if (result.statut === "acceptee") {
+            user.role = "conducteur";
+            localStorage.setItem("user", JSON.stringify(user));
+            renderDriverDashboard();
+        } else {
+            renderBecomeDriver();
+        }
+    } catch (error) {
+        console.error(error);
+        renderBecomeDriver();
+    }
+}
+
+initConducteurPage();
 </script>
 {% endblock %}
