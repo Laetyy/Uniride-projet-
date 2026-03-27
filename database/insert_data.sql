@@ -8,7 +8,56 @@ VALUES
 INSERT INTO Ville (nom_ville, province)
 VALUES
 ('Montreal', 'QC'),
-('Quebec', 'QC');
+('Quebec', 'QC'),
+('Laval', 'QC'),
+('Gatineau', 'QC'),
+('Sherbrooke', 'QC'),
+('Trois-Rivieres', 'QC'),
+('Longueuil', 'QC'),
+('Saguenay', 'QC'),
+('Levis', 'QC'),
+('Terrebonne', 'QC'),
+('Saint-Jean-sur-Richelieu', 'QC'),
+('Drummondville', 'QC'),
+('Granby', 'QC'),
+('Blainville', 'QC'),
+('Saint-Jerome', 'QC'),
+('Toronto', 'ON'),
+('Ottawa', 'ON'),
+('Mississauga', 'ON'),
+('Brampton', 'ON'),
+('Hamilton', 'ON'),
+('London', 'ON'),
+('Markham', 'ON'),
+('Vaughan', 'ON'),
+('Kitchener', 'ON'),
+('Windsor', 'ON'),
+('Richmond Hill', 'ON'),
+('Oakville', 'ON'),
+('Burlington', 'ON'),
+('Vancouver', 'BC'),
+('Surrey', 'BC'),
+('Burnaby', 'BC'),
+('Richmond', 'BC'),
+('Abbotsford', 'BC'),
+('Coquitlam', 'BC'),
+('Kelowna', 'BC'),
+('Victoria', 'BC'),
+('Calgary', 'AB'),
+('Edmonton', 'AB'),
+('Red Deer', 'AB'),
+('Lethbridge', 'AB'),
+('Winnipeg', 'MB'),
+('Brandon', 'MB'),
+('Halifax', 'NS'),
+('Sydney', 'NS'),
+('Saskatoon', 'SK'),
+('Regina', 'SK'),
+('St. John''s', 'NL'),
+('Moncton', 'NB'),
+('Fredericton', 'NB'),
+('Saint John', 'NB'),
+('Charlottetown', 'PE');
 
 INSERT INTO Wallet (id_utilisateur, solde_argent, solde_points)
 VALUES
@@ -20,8 +69,15 @@ VALUES
 (1, 'Toyota Corolla', 'berline', 'ABC123');
 
 INSERT INTO Trajet (
-    id_conducteur, id_ville_depart, id_ville_arrivee, id_vehicule,
-    date_trajet, heure_trajet, prix, places_disponibles, ambiance
+    id_conducteur,
+    id_ville_depart,
+    id_ville_arrivee,
+    id_vehicule,
+    date_trajet,
+    heure_trajet,
+    prix,
+    places_disponibles,
+    ambiance
 )
 VALUES
 (1, 1, 2, 1, '2026-03-25', '10:00:00', 25.00, 3, 'calme');
