@@ -1,107 +1,49 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Profil</h2>
+<h2>Mon Profil</h2>
 
-<div class="dashbord-conducteur">
-    <div class="dashbord-card">
-      <h3>Publier un trajet</h3>
-      <form id="trajetForm">
-        <label>Ville de depart</label>
-        <input type="text" id="ville_depart" placeholder="Ville de depart">
-        
-        <label>Ville d'arrivee</label>
-        <input type="text" id="ville_arrivee" placeholder="Ville d'arrivee">
-        
-        <label>Date</label>
-        <input type="date" id="date_trajet">
+<div class="profile-card">
+    <label>Nom utilisateur</label>
+    <input type="text" id="nom_utilisateur">
 
-        <label>Heure</label>
-        <input type="time" id="heure_trajet">
+    <label>Email</label>
+    <input type="email" id="email">
 
-        <label>Prix</label>
-        <input type="number" id="prix" placeholder="Prix en $">
-
-        <label>Places disponibles</label>
-        <input type="number" id="places_disponibles" placeholder="Places disponibles">
-
-        <label>Ambiance</label>
-        <select id="ambiance">
-            <option value="calme">Calme</option>
-            <option value="dynamique">Dynamique</option>
-        </select>
-
-        <label>Musique</label>
-        <select id="musique">
-            <option value="true">Oui</option>
-            <option value="false">Non</option>
-        </select>
-
-        <label>Telephone</label>
-        <select id="telephone_autorise">
-            <option value="true">Oui</option>
-            <option value="false">Non</option>
-        </select>
-
-        <button type="submit" class="btn">Publier</button>
-      </form>
-    </div>
-
-    <div class="dashbord-card">
-      <h3>Mes trajets </h3>
-      <div id="mes-trajets">
-        <p>Aucun trajet publié pour le moment.</p>
-        
-      </div>
-    </div>
-    <div class="dashbord-card">
-        <h3>Mes réservations</h3>
-        <div id="mes-reservations">
-            <p>Aucune réservation pour le moment.</p>
-        </div>
-    </div>
+    <label>Rôle</label>
+    <input type="text" id="role" disabled>
 </div>
 
 <script>
-    const user = JSON.parse(localStorage.getItem("user"));
+const user = JSON.parse(localStorage.getItem("user"));
 
-    if (!user || user.role !== "conducteur"){
-        document.body.innerHTML = "<h2>Accès refusé</h2><p>Vous devez être connecté en tant que conducteur pour accéder à cette page.</p>";
-    }
+if (!user) {
+    document.body.innerHTML = "<h2>Accès refusé</h2><p>Veuillez vous connecter.</p>";
+} else {
+    document.getElementById("nom_utilisateur").value = user.nom_utilisateur || "";
+    document.getElementById("email").value = user.email || "";
+    document.getElementById("role").value = user.role || "";
+}
 
-    document.getElementById("trajetForm").addEventListener("submit", async (e) => {    
-        e.preventDefault();
+const phtotoInput = document.getElementById("photo-input");
+const photoPreview = document.getElementById("photo-preview");
 
-        const data = {
-            id_conducteur: user.id_utilisateur,
-            ville_depart: document.getElementById("ville_depart").value,
-            ville_arrivee: document.getElementById("ville_arrivee").value,
-            date_trajet: document.getElementById("date_trajet").value,
-            heure_trajet: document.getElementById("heure_trajet").value,
-            prix: parseFloat(document.getElementById("prix").value),
-            places_disponibles: parseInt(document.getElementById("places_disponibles").value),
-            ambiance: document.getElementById("ambiance").value,
-            musique: document.getElementById("musique").value === "true",
-            telephone_autorise: document.getElementById("telephone_autorise").value === "true"
-        };
-
-        try {
-            const response = await fetch("/trajets", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-                alert("✅ Trajet publié avec succès!");
-                document.getElementById("trajetForm").reset();
-            } else {
-                alert("❌ " + (result.error || "Erreur"));
-            }
-        } catch (error) {
-            alert("❌ Erreur: " + error.message);
+phtotoInput.addEventListener("change", function() {
+    const file = this.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            photoPreview.src = e.target.result;
         }
-    });
+        reader.readAsDataURL(file);
+    }
+});
+
+document.getElementById("upload-btn").addEventListener("click", function() {
+    document.getElementById("upload-btn").addEventListener("click", function () {
+    alert("Pour l’instant, la photo est affichée seulement en aperçu. On connectera l’upload au backend après.");
+});
+});
+    
 </script>
 {% endblock %}

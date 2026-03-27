@@ -46,7 +46,7 @@ def test():
 def profile_page():
     return flask.render_template("profil.html")
 
-@app.route("/conducteurs-page")
+@app.route("/conducteur-page")
 def conducteur_page():
     return flask.render_template("conducteur.html")
 

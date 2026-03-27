@@ -3,110 +3,216 @@
 {% block content %}
 <h2>Espace Conducteur</h2>
 
-<div class="dashboard-conducteur">
-    <div class="dashboard-card">
-        <h3>Publier un trajet</h3>
-        <form id="trajetForm">
-            <label>Ville de départ</label>
-            <input type="text" id="ville_depart" placeholder="Ville de départ">
-
-            <label>Ville d'arrivée</label>
-            <input type="text" id="ville_arrivee" placeholder="Ville d'arrivée">
-
-            <label>Date</label>
-            <input type="date" id="date_trajet">
-
-            <label>Heure</label>
-            <input type="time" id="heure_trajet">
-
-            <label>Prix</label>
-            <input type="number" id="prix" placeholder="Prix">
-
-            <label>Places disponibles</label>
-            <input type="number" id="places_disponibles" placeholder="Places disponibles">
-
-            <label>Ambiance</label>
-            <select id="ambiance">
-                <option value="calme">Calme</option>
-                <option value="dynamique">Dynamique</option>
-            </select>
-
-            <label>Musique</label>
-            <select id="musique">
-                <option value="true">Oui</option>
-                <option value="false">Non</option>
-            </select>
-
-            <label>Téléphone autorisé</label>
-            <select id="telephone_autorise">
-                <option value="true">Oui</option>
-                <option value="false">Non</option>
-            </select>
-
-            <button type="submit">Publier le trajet</button>
-        </form>
-    </div>
-
-    <div class="dashboard-card">
-        <h3>Mes trajets publiés</h3>
-        <div id="mes-trajets">
-            <p>Aucun trajet affiché pour le moment.</p>
-        </div>
-    </div>
-
-    <div class="dashboard-card">
-        <h3>Réservations reçues</h3>
-        <div id="reservations-recues">
-            <p>Aucune réservation affichée pour le moment.</p>
-        </div>
-    </div>
-</div>
+<div id="conducteur-container"></div>
 
 <script>
 const user = JSON.parse(localStorage.getItem("user"));
+const container = document.getElementById("conducteur-container");
 
-if (!user || user.role !== "conducteur") {
-    document.body.innerHTML = "<h2>❌ Accès refusé : Cette page est réservée aux conducteurs.</h2>";
+function renderNotConnected() {
+    container.innerHTML = `
+        <div class="dashboard-card">
+            <h3>Accès refusé</h3>
+            <p>Vous devez être connecté pour accéder à cette page.</p>
+            <a class="btn" href="/login-page">Se connecter</a>
+        </div>
+    `;
 }
 
-document.getElementById("trajetForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
-    
-    const data = {
-        id_conducteur: user.id_utilisateur,
-        id_ville_depart: 1,
-        id_ville_arrivee: 2,
-        id_vehicule: 1,
-        ville_depart: document.getElementById("ville_depart").value,
-        ville_arrivee: document.getElementById("ville_arrivee").value,
-        date_trajet: document.getElementById("date_trajet").value,
-        heure_trajet: document.getElementById("heure_trajet").value,
-        prix: parseFloat(document.getElementById("prix").value),
-        places_disponibles: parseInt(document.getElementById("places_disponibles").value),
-        ambiance: document.getElementById("ambiance").value,
-        musique: document.getElementById("musique").value === "true",
-        telephone_autorise: document.getElementById("telephone_autorise").value === "true"
-    };
-    
-    try {
-        const response = await fetch("/trajets", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        });
-        const result = await response.json();
-        if (response.ok) {
-            alert("✅ Trajet publié avec succès!");
-            document.getElementById("trajetForm").reset();
-        } else {
-            alert("❌ Erreur : " + (result.error || "Inconnue"));
+function renderBecomeDriver() {
+    container.innerHTML = `
+        <div class="dashboard-card">
+            <h3>Devenir conducteur</h3>
+            <p>Vous n’êtes pas encore conducteur. Remplissez ce formulaire pour soumettre votre demande de certification.</p>
+
+            <form id="certificationForm">
+                <label>Numéro de permis</label>
+                <input type="text" id="numero_permis" placeholder="Ex: P123456789">
+
+                <label>Marque / Modèle</label>
+                <input type="text" id="modele" placeholder="Ex: Toyota Corolla">
+
+                <label>Type de véhicule</label>
+                <input type="text" id="type_vehicule" placeholder="Ex: Berline">
+
+                <label>Couleur</label>
+                <input type="text" id="couleur" placeholder="Ex: Noir">
+
+                <label>Année</label>
+                <input type="number" id="annee" placeholder="Ex: 2020">
+
+                <label>Plaque d'immatriculation</label>
+                <input type="text" id="plaque_immatriculation" placeholder="Ex: ABC123">
+
+                <button type="submit" class="btn">Envoyer la demande</button>
+            </form>
+        </div>
+    `;
+
+    document.getElementById("certificationForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const demande = {
+            numero_permis: document.getElementById("numero_permis").value,
+            modele: document.getElementById("modele").value,
+            type_vehicule: document.getElementById("type_vehicule").value,
+            couleur: document.getElementById("couleur").value,
+            annee: document.getElementById("annee").value,
+            plaque_immatriculation: document.getElementById("plaque_immatriculation").value,
+            statut_certification: "en_attente"
+        };
+
+        localStorage.setItem("demandeConducteur", JSON.stringify(demande));
+        alert("✅ Demande envoyée. En attente de validation.");
+        renderPendingDriver();
+    });
+}
+
+function renderPendingDriver() {
+    const demande = JSON.parse(localStorage.getItem("demandeConducteur"));
+
+    container.innerHTML = `
+        <div class="dashboard-card">
+            <h3>Demande en attente</h3>
+            <p>Votre demande de certification a bien été soumise.</p>
+            <p><strong>Statut :</strong> en attente</p>
+
+            <h4>Informations soumises</h4>
+            <p><strong>Permis :</strong> ${demande?.numero_permis || ""}</p>
+            <p><strong>Véhicule :</strong> ${demande?.modele || ""}</p>
+            <p><strong>Type :</strong> ${demande?.type_vehicule || ""}</p>
+            <p><strong>Couleur :</strong> ${demande?.couleur || ""}</p>
+            <p><strong>Année :</strong> ${demande?.annee || ""}</p>
+            <p><strong>Plaque :</strong> ${demande?.plaque_immatriculation || ""}</p>
+
+            <button class="btn" id="simulateAccept">Simuler validation admin</button>
+        </div>
+    `;
+
+    document.getElementById("simulateAccept").addEventListener("click", function () {
+        user.role = "conducteur";
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("conducteurCertifie", "true");
+        alert("✅ Conducteur certifié !");
+        renderDriverDashboard();
+    });
+}
+
+function renderDriverDashboard() {
+    container.innerHTML = `
+        <div class="dashboard-conducteur">
+            <div class="dashboard-card">
+                <h3>Publier un trajet</h3>
+
+                <form id="trajetForm">
+                    <label>ID ville de départ</label>
+                    <input type="number" id="id_ville_depart" placeholder="Ex: 1">
+
+                    <label>ID ville d'arrivée</label>
+                    <input type="number" id="id_ville_arrivee" placeholder="Ex: 2">
+
+                    <label>ID véhicule</label>
+                    <input type="number" id="id_vehicule" placeholder="Ex: 1">
+
+                    <label>Date</label>
+                    <input type="date" id="date_trajet">
+
+                    <label>Heure</label>
+                    <input type="time" id="heure_trajet">
+
+                    <label>Prix</label>
+                    <input type="number" id="prix" placeholder="Prix">
+
+                    <label>Places disponibles</label>
+                    <input type="number" id="places_disponibles" placeholder="Places disponibles">
+
+                    <label>Ambiance</label>
+                    <select id="ambiance">
+                        <option value="calme">Calme</option>
+                        <option value="dynamique">Dynamique</option>
+                    </select>
+
+                    <label>Musique</label>
+                    <select id="musique">
+                        <option value="true">Oui</option>
+                        <option value="false">Non</option>
+                    </select>
+
+                    <label>Téléphone autorisé</label>
+                    <select id="telephone_autorise">
+                        <option value="true">Oui</option>
+                        <option value="false">Non</option>
+                    </select>
+
+                    <button type="submit" class="btn">Publier le trajet</button>
+                </form>
+            </div>
+
+            <div class="dashboard-card">
+                <h3>Mes trajets publiés</h3>
+                <div id="mes-trajets">
+                    <p>Aucun trajet publié pour le moment.</p>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <h3>Réservations reçues</h3>
+                <div id="reservations-recues">
+                    <p>Aucune réservation reçue pour le moment.</p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById("trajetForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const data = {
+            id_conducteur: user.id_utilisateur,
+            id_ville_depart: document.getElementById("id_ville_depart").value,
+            id_ville_arrivee: document.getElementById("id_ville_arrivee").value,
+            id_vehicule: document.getElementById("id_vehicule").value,
+            date_trajet: document.getElementById("date_trajet").value,
+            heure_trajet: document.getElementById("heure_trajet").value,
+            prix: document.getElementById("prix").value,
+            places_disponibles: document.getElementById("places_disponibles").value,
+            ambiance: document.getElementById("ambiance").value,
+            musique: document.getElementById("musique").value === "true",
+            telephone_autorise: document.getElementById("telephone_autorise").value === "true"
+        };
+
+        try {
+            const response = await fetch("/trajets", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert("✅ Trajet publié avec succès");
+                document.getElementById("trajetForm").reset();
+            } else {
+                alert("❌ " + (result.error || "Erreur"));
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Erreur serveur");
         }
-    } catch (error) {
-        console.error(error);
-        alert("❌ Erreur serveur lors de la publication du trajet.");
-    }
-});
+    });
+}
+
+if (!user) {
+    renderNotConnected();
+} else if (localStorage.getItem("conducteurCertifie") === "true" && user.role === "conducteur") {
+    renderDriverDashboard();
+} else if (localStorage.getItem("demandeConducteur")) {
+    renderPendingDriver();
+} else {
+    renderBecomeDriver();
+}
 </script>
 {% endblock %}
