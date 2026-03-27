@@ -2,8 +2,8 @@ USE uniride;
 
 INSERT INTO Utilisateur (nom_utilisateur, mot_de_passe, email)
 VALUES
-('laeticia', '123456', 'laeticia@mail.com'),
-('user2', '123456', 'user2@mail.com');
+('laeticia', 'scrypt:32768:8:1$mOZJkJWMq4NdWgej$8cd7104ba85c77cfbe95ba8e311a0178d23ac123cafe549ed625e3374de19a39d1702a1ed0beb9f1add1935a3ad92abe838c582e36a340e85f646cfd3d14627e', 'laeticia@mail.com'),
+('user2', 'scrypt:32768:8:1$mOZJkJWMq4NdWgej$8cd7104ba85c77cfbe95ba8e311a0178d23ac123cafe549ed625e3374de19a39d1702a1ed0beb9f1add1935a3ad92abe838c582e36a340e85f646cfd3d14627e', 'user2@mail.com');
 
 INSERT INTO Ville (nom_ville, province)
 VALUES

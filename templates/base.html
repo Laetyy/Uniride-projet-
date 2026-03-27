@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>UNIRIDE</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <h1>🚗 UNIRIDE</h1>
+        <div class="nav-links">
+            <a href="/home">Accueil</a>
+            <a href="/profil-page">Profil</a>
+            <a href="/conducteur-page">Conducteur</a>
+            <a href="/login-page">Login</a>
+            <a href="/register-page">Register</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

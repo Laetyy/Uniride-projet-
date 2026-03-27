@@ -1,3 +1,4 @@
+CREATE DATABASE IF NOT EXISTS uniride;
 USE uniride;
 
 DROP TABLE IF EXISTS ReponsePlainte;
@@ -100,7 +101,7 @@ CREATE TABLE Trajet (
     FOREIGN KEY (id_ville_arrivee) REFERENCES Ville(id_ville),
     FOREIGN KEY (id_vehicule) REFERENCES Vehicule(id_vehicule),
     CHECK (prix >= 0),
-    CHECK (places_disponibles > 0),
+    CHECK (places_disponibles >= 0),
     CHECK (id_ville_depart <> id_ville_arrivee)
 );
 

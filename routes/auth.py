@@ -79,7 +79,6 @@ def register():
             telephone,
             role
         ))
-        connection.commit()
 
         user_id = cursor.lastrowid
 
@@ -87,6 +86,7 @@ def register():
             INSERT INTO Wallet (id_utilisateur, solde_argent, solde_points)
             VALUES (%s, %s, %s)
         """, (user_id, 0.00, 0))
+
         connection.commit()
 
         return jsonify({
@@ -151,6 +151,8 @@ def login():
                 "user": {
                     "id_utilisateur": user["id_utilisateur"],
                     "nom_utilisateur": user["nom_utilisateur"],
+                    "nom": user["nom"],
+                    "prenom": user["prenom"],
                     "email": user["email"],
                     "role": user["role"],
                     "statut": user["statut"]

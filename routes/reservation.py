@@ -13,10 +13,17 @@ def create_reservation():
 
     id_trajet = data.get("id_trajet")
     id_passager = data.get("id_passager")
-    nb_places = data.get("nb_places", 1)
+
+    try:
+        nb_places = int(data.get("nb_places", 1))
+    except (TypeError, ValueError):
+        return jsonify({"error": "nb_places doit être un entier valide"}), 400
 
     if not id_trajet or not id_passager:
         return jsonify({"error": "id_trajet et id_passager sont obligatoires"}), 400
+
+    if nb_places <= 0:
+        return jsonify({"error": "nb_places doit être supérieur à 0"}), 400
 
     connection = None
     cursor = None
@@ -44,9 +51,13 @@ def create_reservation():
 
         cursor.execute("""
             UPDATE Trajet
-            SET places_disponibles = places_disponibles - %s
+            SET places_disponibles = places_disponibles - %s,
+                statut = CASE
+                    WHEN places_disponibles - %s <= 0 THEN 'complet'
+                    ELSE statut
+                END
             WHERE id_trajet = %s
-        """, (nb_places, id_trajet))
+        """, (nb_places, nb_places, id_trajet))
 
         connection.commit()
 

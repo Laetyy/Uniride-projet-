@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Espace Conducteur</h2>
+
+<div class="dashboard-conducteur">
+    <div class="dashboard-card">
+        <h3>Publier un trajet</h3>
+        <form id="trajetForm">
+            <label>Ville de départ</label>
+            <input type="text" id="ville_depart" placeholder="Ville de départ">
+
+            <label>Ville d'arrivée</label>
+            <input type="text" id="ville_arrivee" placeholder="Ville d'arrivée">
+
+            <label>Date</label>
+            <input type="date" id="date_trajet">
+
+            <label>Heure</label>
+            <input type="time" id="heure_trajet">
+
+            <label>Prix</label>
+            <input type="number" id="prix" placeholder="Prix">
+
+            <label>Places disponibles</label>
+            <input type="number" id="places_disponibles" placeholder="Places disponibles">
+
+            <label>Ambiance</label>
+            <select id="ambiance">
+                <option value="calme">Calme</option>
+                <option value="dynamique">Dynamique</option>
+            </select>
+
+            <label>Musique</label>
+            <select id="musique">
+                <option value="true">Oui</option>
+                <option value="false">Non</option>
+            </select>
+
+            <label>Téléphone autorisé</label>
+            <select id="telephone_autorise">
+                <option value="true">Oui</option>
+                <option value="false">Non</option>
+            </select>
+
+            <button type="submit">Publier le trajet</button>
+        </form>
+    </div>
+
+    <div class="dashboard-card">
+        <h3>Mes trajets publiés</h3>
+        <div id="mes-trajets">
+            <p>Aucun trajet affiché pour le moment.</p>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <h3>Réservations reçues</h3>
+        <div id="reservations-recues">
+            <p>Aucune réservation affichée pour le moment.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+const user = JSON.parse(localStorage.getItem("user"));
+
+if (!user || user.role !== "conducteur") {
+    document.body.innerHTML = "<h2>❌ Accès refusé : Cette page est réservée aux conducteurs.</h2>";
+}
+
+document.getElementById("trajetForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    
+    const data = {
+        id_conducteur: user.id_utilisateur,
+        id_ville_depart: 1,
+        id_ville_arrivee: 2,
+        id_vehicule: 1,
+        ville_depart: document.getElementById("ville_depart").value,
+        ville_arrivee: document.getElementById("ville_arrivee").value,
+        date_trajet: document.getElementById("date_trajet").value,
+        heure_trajet: document.getElementById("heure_trajet").value,
+        prix: parseFloat(document.getElementById("prix").value),
+        places_disponibles: parseInt(document.getElementById("places_disponibles").value),
+        ambiance: document.getElementById("ambiance").value,
+        musique: document.getElementById("musique").value === "true",
+        telephone_autorise: document.getElementById("telephone_autorise").value === "true"
+    };
+    
+    try {
+        const response = await fetch("/trajets", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (response.ok) {
+            alert("✅ Trajet publié avec succès!");
+            document.getElementById("trajetForm").reset();
+        } else {
+            alert("❌ Erreur : " + (result.error || "Inconnue"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("❌ Erreur serveur lors de la publication du trajet.");
+    }
+});
+</script>
+{% endblock %}

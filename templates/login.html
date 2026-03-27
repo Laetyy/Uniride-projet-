@@ -20,5 +20,25 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script>
+        // Redirection après login réussi
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            const loginBtn = e.target.querySelector("button");
+            const originalText = loginBtn.textContent;
+            loginBtn.disabled = true;
+            loginBtn.textContent = "Chargement...";
+            
+            setTimeout(() => {
+                const user = JSON.parse(localStorage.getItem("user"));
+                if (user) {
+                    alert("✅ Connexion réussie");
+                    window.location.href = "/home";
+                } else {
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = originalText;
+                }
+            }, 500);
+        });
+    </script>
 </body>
 </html>

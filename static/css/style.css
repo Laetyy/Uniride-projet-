@@ -64,3 +64,189 @@ input {
     margin-bottom: 15px;
     background: #fafafa;
 }
+.trajet{
+    background: white;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 8px;
+}
+#trajets-container {
+    margin-top: 20px;
+}
+
+.trajet-card {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.trajet-card h4 {
+    margin-top: 0;
+}
+
+.trajet-card button {
+    margin-top: 10px;
+}
+.profile-container, .dashbord-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+.profile-card, .dashbord-card {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 15px;
+    background: #fafafa;
+}
+.photo-section {
+    display : flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 15px;
+
+}
+.profile-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+.profile-card input, .dashbord-card input, .dashbord-card select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+#mes-trajets, #mes-reservations {
+    margin-top: 20px;
+}
+.navbar {
+    background: #222;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    margin-left: 20px;
+    font-weight: bold;
+}
+.nav-links a:hover {
+    text-decoration: underline;
+}
+.container {
+    width: 90%;
+    max-width: 700px;
+    margin: 50px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+.profile-container,
+.dashboard-conducteur {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+.profile-card,
+.dashboard-card {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 15px;
+    background: #fafafa;
+}
+.photo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.profile-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+.profile-card form,
+.dashboard-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.profile-card input,
+.dashboard-card input,
+.dashboard-card select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+#mes-trajets,
+#mes-reservations {
+    margin-top: 20px;
+}
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f4f4f8;
+}
+
+.navbar {
+    background: #2c3e50;
+    color: white;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-links a {
+    color: white;
+    margin-left: 15px;
+    text-decoration: none;
+}
+
+.container {
+    max-width: 900px;
+    margin: 30px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.home-actions {
+    margin: 20px 0;
+}
+
+.btn {
+    display: inline-block;
+    background: #222;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    margin-right: 10px;
+}
+
+.trajet-card {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 10px;
+}

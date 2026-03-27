@@ -1,20 +1,70 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>UniRide</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>UniRide Canada</h1>
-        <p>Plateforme de covoiturage.</p>
+{% extends "base.html" %}
 
-        <div class="buttons">
-            <a class="btn" href="/register-page">Créer un compte</a>
-            <a class="btn" href="/login-page">Se connecter</a>
-            <a class="btn secondary" href="/trajets-page">Voir les trajets</a>
-        </div>
-    </div>
-</body>
-</html>
+{% block content %}
+<h2>UniRide Canada</h2>
+<p>Plateforme de covoiturage.</p>
+
+<div class="home-actions">
+    <a class="btn" href="/register-page">Créer un compte</a>
+    <a class="btn" href="/login-page">Se connecter</a>
+    <a class="btn" href="/trajets-page">Voir les trajets</a>
+</div>
+
+<div id="welcome-message"></div>
+
+<h3>Trajets disponibles</h3>
+<div id="trajets-container"></div>
+
+<script>
+const user = JSON.parse(localStorage.getItem("user"));
+
+if (user) {
+    document.getElementById("welcome-message").innerHTML =
+        `<p>Bienvenue ${user.nom_utilisateur || ""} 👋</p>`;
+}
+
+async function chargerTrajets() {
+    const container = document.getElementById("trajets-container");
+
+    try {
+        const response = await fetch("/trajets");
+        const trajets = await response.json();
+
+        if (!response.ok) {
+            container.innerHTML = `<p>Erreur : ${trajets.error}</p>`;
+            return;
+        }
+
+        if (trajets.length === 0) {
+            container.innerHTML = "<p>Aucun trajet disponible.</p>";
+            return;
+        }
+
+        container.innerHTML = "";
+
+        trajets.forEach(trajet => {
+            const card = document.createElement("div");
+            card.className = "trajet-card";
+
+            card.innerHTML = `
+                <h4>${trajet.ville_depart} → ${trajet.ville_arrivee}</h4>
+                <p><strong>Conducteur :</strong> ${trajet.conducteur}</p>
+                <p><strong>Date :</strong> ${trajet.date_trajet}</p>
+                <p><strong>Heure :</strong> ${trajet.heure_trajet}</p>
+                <p><strong>Prix :</strong> ${trajet.prix}$</p>
+                <p><strong>Places :</strong> ${trajet.places_disponibles}</p>
+                <p><strong>Ambiance :</strong> ${trajet.ambiance}</p>
+            `;
+
+            container.appendChild(card);
+        });
+
+    } catch (error) {
+        container.innerHTML = "<p>Erreur serveur lors du chargement des trajets.</p>";
+        console.error(error);
+    }
+}
+
+chargerTrajets();
+</script>
+{% endblock %}
