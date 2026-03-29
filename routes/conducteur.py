@@ -269,3 +269,51 @@ def get_trajets_conducteur(id_utilisateur):
             cursor.close()
         if connection:
             connection.close()
+
+
+@conducteur_bp.route("/reservations-conducteur/<int:id_conducteur>", methods=["GET"])
+def reservations_conducteur(id_conducteur):
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT
+                r.id_reservation,
+                u.nom_utilisateur AS passager,
+                t.date_trajet,
+                t.heure_trajet,
+                vd.nom_ville AS depart,
+                va.nom_ville AS arrivee,
+                r.nb_places,
+                r.statut
+            FROM Reservation r
+            JOIN Trajet t ON r.id_trajet = t.id_trajet
+            JOIN Utilisateur u ON r.id_passager = u.id_utilisateur
+            JOIN Ville vd ON t.id_ville_depart = vd.id_ville
+            JOIN Ville va ON t.id_ville_arrivee = va.id_ville
+            WHERE t.id_conducteur = %s
+            ORDER BY r.date_reservation DESC
+        """, (id_conducteur,))
+
+        reservations = cursor.fetchall()
+
+        for reservation in reservations:
+            if reservation.get("date_trajet"):
+                reservation["date_trajet"] = str(reservation["date_trajet"])
+            if reservation.get("heure_trajet"):
+                reservation["heure_trajet"] = str(reservation["heure_trajet"])
+
+        return jsonify(reservations), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()

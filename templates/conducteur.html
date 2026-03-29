@@ -271,6 +271,7 @@ function renderDriverDashboard() {
                 alert("✅ Trajet publié avec succès");
                 document.getElementById("trajetForm").reset();
                 chargerMesTrajets();
+                chargerReservationsConducteur();
             } else {
                 alert("❌ " + (result.error || "Erreur"));
             }
@@ -281,6 +282,7 @@ function renderDriverDashboard() {
     });
 
     chargerMesTrajets();
+    chargerReservationsConducteur();
 }
 
 async function chargerMesTrajets() {
@@ -322,6 +324,49 @@ async function chargerMesTrajets() {
     } catch (error) {
         console.error(error);
         zone.innerHTML = "<p>Erreur lors du chargement des trajets.</p>";
+    }
+}
+
+async function chargerReservationsConducteur() {
+    const zone = document.getElementById("reservations-recues");
+
+    if (!zone || !user) return;
+
+    try {
+        const response = await fetch(`/reservations-conducteur/${user.id_utilisateur}`);
+        const reservations = await response.json();
+
+        if (!response.ok) {
+            zone.innerHTML = `<p>Erreur : ${reservations.error}</p>`;
+            return;
+        }
+
+        if (reservations.length === 0) {
+            zone.innerHTML = "<p>Aucune réservation reçue pour le moment.</p>";
+            return;
+        }
+
+        zone.innerHTML = "";
+
+        reservations.forEach(reservation => {
+            const card = document.createElement("div");
+            card.className = "trajet-card";
+
+            card.innerHTML = `
+                <h4>${reservation.depart} → ${reservation.arrivee}</h4>
+                <p><strong>Passager :</strong> ${reservation.passager}</p>
+                <p><strong>Date :</strong> ${reservation.date_trajet}</p>
+                <p><strong>Heure :</strong> ${reservation.heure_trajet}</p>
+                <p><strong>Places réservées :</strong> ${reservation.nb_places}</p>
+                <p><strong>Statut :</strong> ${reservation.statut}</p>
+            `;
+
+            zone.appendChild(card);
+        });
+
+    } catch (error) {
+        console.error(error);
+        zone.innerHTML = "<p>Erreur lors du chargement des réservations reçues.</p>";
     }
 }
 

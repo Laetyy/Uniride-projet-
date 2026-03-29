@@ -11,7 +11,7 @@ app.secret_key = 'uniride_secret_key_2026'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # 2 MB max
+app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024
 
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
@@ -59,6 +59,11 @@ def profile_page():
 @app.route("/conducteur-page")
 def conducteur_page():
     return flask.render_template("conducteur.html")
+
+
+@app.route("/mes-reservations-page")
+def mes_reservations_page():
+    return flask.render_template("mes_reservations.html")
 
 
 if __name__ == "__main__":

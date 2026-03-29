@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Mes réservations</h2>
+<div id="reservations-container"></div>
+
+<script>
+const user = JSON.parse(localStorage.getItem("user"));
+const container = document.getElementById("reservations-container");
+
+if (!user) {
+    container.innerHTML = `
+        <div class="dashboard-card">
+            <h3>Accès refusé</h3>
+            <p>Veuillez vous connecter pour voir vos réservations.</p>
+            <a class="btn" href="/login-page">Se connecter</a>
+        </div>
+    `;
+} else {
+    chargerReservations();
+}
+
+async function chargerReservations() {
+    try {
+        const response = await fetch(`/reservations/${user.id_utilisateur}`);
+        const reservations = await response.json();
+
+        if (!response.ok) {
+            container.innerHTML = `<p>Erreur : ${reservations.error}</p>`;
+            return;
+        }
+
+        if (reservations.length === 0) {
+            container.innerHTML = "<p>Aucune réservation pour le moment.</p>";
+            return;
+        }
+
+        container.innerHTML = "";
+
+        reservations.forEach(reservation => {
+            const card = document.createElement("div");
+            card.className = "trajet-card";
+
+            card.innerHTML = `
+                <h4>${reservation.ville_depart} → ${reservation.ville_arrivee}</h4>
+                <p><strong>Conducteur :</strong> ${reservation.conducteur}</p>
+                <p><strong>Date du trajet :</strong> ${reservation.date_trajet}</p>
+                <p><strong>Heure :</strong> ${reservation.heure_trajet}</p>
+                <p><strong>Prix :</strong> ${reservation.prix}$</p>
+                <p><strong>Places réservées :</strong> ${reservation.nb_places}</p>
+                <p><strong>Statut :</strong> ${reservation.statut}</p>
+                <p><strong>Date de réservation :</strong> ${reservation.date_reservation}</p>
+            `;
+
+            container.appendChild(card);
+        });
+    } catch (error) {
+        console.error(error);
+        container.innerHTML = "<p>Erreur serveur lors du chargement des réservations.</p>";
+    }
+}
+</script>
+{% endblock %}
