@@ -413,3 +413,150 @@ textarea:focus {
         flex-direction: column;
     }
 }
+/* ===== PROFIL UTILISATEUR STYLE POPARIDE ===== */
+.user-profile-page {
+    margin-top: 10px;
+}
+
+.user-profile-top {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.user-profile-left {
+    padding: 28px;
+}
+
+.user-profile-photo-wrap {
+    position: relative;
+    width: 180px;
+    margin-bottom: 18px;
+}
+
+.user-profile-photo {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 4px solid #edf4fb;
+    background: #fff;
+}
+
+.photo-edit-btn {
+    position: absolute;
+    right: -4px;
+    bottom: 10px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    box-shadow: var(--shadow);
+}
+
+.user-profile-left h3 {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.verification-box {
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+}
+
+.verification-box h4 {
+    margin-bottom: 14px;
+    color: var(--primary);
+}
+
+.verification-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    color: var(--muted);
+    border-bottom: 1px solid #eef2f7;
+}
+
+.user-profile-main {
+    display: grid;
+    gap: 22px;
+}
+
+.user-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 26px 20px;
+}
+
+.stat-number {
+    font-size: 34px;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    color: var(--muted);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.bio-showcase-card {
+    padding: 28px;
+}
+
+.bio-showcase-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+.review-card {
+    padding: 26px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.home-welcome {
+    color: var(--primary);
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 16px;
+}
+
+@media (max-width: 980px) {
+    .user-profile-top {
+        grid-template-columns: 1fr;
+    }
+
+    .user-stats-row,
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bio-showcase-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

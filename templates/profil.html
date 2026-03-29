@@ -1,42 +1,115 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Mon Profil</h2>
+<h2>Mon profil</h2>
 
-<div class="profile-layout">
-    <div class="photo-card">
-        <div class="photo-section">
-            <img id="photo-preview" class="profile-photo" src="/static/uploads/default-profile.png" alt="Photo de profil">
+<div class="user-profile-page">
+    <div class="user-profile-top">
+        <div class="user-profile-left card">
+            <div class="user-profile-photo-wrap">
+                <img id="photo-preview" class="user-profile-photo" src="/static/uploads/default-profile.png" alt="Photo de profil">
+                <label for="photo-input" class="photo-edit-btn">📷</label>
+                <input type="file" id="photo-input" accept=".png,.jpg,.jpeg,.webp" hidden>
+            </div>
 
-            <input type="file" id="photo-input" accept=".png,.jpg,.jpeg,.webp">
-            <button class="btn" id="upload-btn" type="button">Mettre à jour la photo</button>
-            <p class="small-text">Formats acceptés : PNG, JPG, JPEG, WEBP</p>
+            <h3 id="profile-display-name">Utilisateur</h3>
+            <p id="profile-joined">Membre UniRide</p>
+            <p id="profile-extra-info">Profil utilisateur</p>
+
+            <div class="verification-box">
+                <h4>Vérifications</h4>
+                <div class="verification-item">
+                    <span>✅ Email</span>
+                    <strong>Vérifié</strong>
+                </div>
+                <div class="verification-item">
+                    <span>📱 Téléphone</span>
+                    <strong id="phone-status">Non renseigné</strong>
+                </div>
+                <div class="verification-item">
+                    <span>👤 Profil</span>
+                    <strong>Actif</strong>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div class="profile-card">
-        <label>Nom utilisateur</label>
-        <input type="text" id="nom_utilisateur" disabled>
+        <div class="user-profile-main">
+            <div class="user-stats-row">
+                <div class="stat-card card">
+                    <div class="stat-number" id="rides-taken">0</div>
+                    <div class="stat-label">Réservations</div>
+                </div>
+                <div class="stat-card card">
+                    <div class="stat-number" id="trips-posted">0</div>
+                    <div class="stat-label">Trajets publiés</div>
+                </div>
+                <div class="stat-card card">
+                    <div class="stat-number" id="wallet-balance">0$</div>
+                    <div class="stat-label">Solde wallet</div>
+                </div>
+            </div>
 
-        <label>Nom</label>
-        <input type="text" id="nom">
+            <div class="card bio-showcase-card">
+                <div class="bio-showcase-top">
+                    <h3>À propos de moi</h3>
+                    <button class="btn secondary" id="toggle-edit-profile-btn" type="button">Modifier</button>
+                </div>
+                <p id="bio-display">Aucune bio pour le moment.</p>
+            </div>
 
-        <label>Prénom</label>
-        <input type="text" id="prenom">
+            <div class="card review-card">
+                <h3>Informations du compte</h3>
+                <div class="info-grid">
+                    <div>
+                        <label>Nom d'utilisateur</label>
+                        <input type="text" id="nom_utilisateur" disabled>
+                    </div>
+                    <div>
+                        <label>Rôle</label>
+                        <input type="text" id="role" disabled>
+                    </div>
+                    <div>
+                        <label>Email</label>
+                        <input type="email" id="email">
+                    </div>
+                    <div>
+                        <label>Téléphone</label>
+                        <input type="text" id="telephone" placeholder="+15141234567">
+                    </div>
+                    <div>
+                        <label>Nom</label>
+                        <input type="text" id="nom">
+                    </div>
+                    <div>
+                        <label>Prénom</label>
+                        <input type="text" id="prenom">
+                    </div>
+                </div>
+            </div>
 
-        <label>Email</label>
-        <input type="email" id="email">
+            <div class="card review-card" id="edit-profile-panel" style="display:none;">
+                <h3>Personnaliser mon profil</h3>
 
-        <label>Téléphone</label>
-        <input type="text" id="telephone" placeholder="+15141234567">
+                <div class="info-grid">
+                    <div style="grid-column: 1 / -1;">
+                        <label>Bio / Description</label>
+                        <textarea id="bio" rows="5" placeholder="Ex: Je suis étudiante et j’aime voyager."></textarea>
+                    </div>
+                </div>
 
-        <label>Bio</label>
-        <textarea id="bio" rows="4" placeholder="Écris quelque chose sur toi..."></textarea>
+                <div class="home-actions">
+                    <button class="btn" id="save-profile-btn" type="button">Mettre à jour le profil</button>
+                    <button class="btn secondary" id="upload-btn" type="button">Mettre à jour la photo</button>
+                </div>
 
-        <label>Rôle</label>
-        <input type="text" id="role" disabled>
+                <p class="small-text">Formats acceptés : PNG, JPG, JPEG, WEBP</p>
+            </div>
 
-        <button class="btn" id="save-profile-btn" type="button">Enregistrer le profil</button>
+            <div class="card review-card">
+                <h3>Avis</h3>
+                <p>Les avis et commentaires des trajets pourront apparaître ici plus tard.</p>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -47,6 +120,7 @@ if (!user) {
     document.body.innerHTML = "<h2>Accès refusé</h2><p>Veuillez vous connecter.</p>";
 } else {
     chargerProfil();
+    chargerStatsProfil();
 }
 
 async function chargerProfil() {
@@ -67,13 +141,47 @@ async function chargerProfil() {
         document.getElementById("bio").value = data.bio || "";
         document.getElementById("role").value = data.role || "";
 
+        const displayName = `${data.prenom || ""} ${data.nom || ""}`.trim() || data.nom_utilisateur || "Utilisateur";
+        document.getElementById("profile-display-name").textContent = displayName;
+        document.getElementById("bio-display").textContent = data.bio || "Aucune bio pour le moment.";
+
+        const phoneStatus = document.getElementById("phone-status");
+        phoneStatus.textContent = data.telephone ? "Vérifié" : "Non renseigné";
+
+        if (data.prenom || data.nom) {
+            document.getElementById("profile-extra-info").textContent = `${data.prenom || ""} ${data.nom || ""}`.trim();
+        } else {
+            document.getElementById("profile-extra-info").textContent = "Profil utilisateur";
+        }
+
         const photoPreview = document.getElementById("photo-preview");
         if (data.photo_profil) {
             photoPreview.src = `/static/${data.photo_profil}`;
         }
+
     } catch (error) {
         console.error(error);
         alert("Erreur serveur");
+    }
+}
+
+async function chargerStatsProfil() {
+    try {
+        const reservationsResponse = await fetch(`/reservations/${user.id_utilisateur}`);
+        const reservations = await reservationsResponse.json();
+
+        if (reservationsResponse.ok && Array.isArray(reservations)) {
+            document.getElementById("rides-taken").textContent = reservations.length;
+        }
+
+        const trajetsResponse = await fetch(`/conducteur/trajets/${user.id_utilisateur}`);
+        const trajets = await trajetsResponse.json();
+
+        if (trajetsResponse.ok && Array.isArray(trajets)) {
+            document.getElementById("trips-posted").textContent = trajets.length;
+        }
+    } catch (error) {
+        console.error(error);
     }
 }
 
@@ -158,6 +266,16 @@ document.getElementById("save-profile-btn").addEventListener("click", async func
     } catch (error) {
         console.error(error);
         alert("Erreur serveur");
+    }
+});
+
+document.getElementById("toggle-edit-profile-btn").addEventListener("click", function() {
+    const panel = document.getElementById("edit-profile-panel");
+    if (panel.style.display === "none") {
+        panel.style.display = "block";
+        panel.scrollIntoView({ behavior: "smooth" });
+    } else {
+        panel.style.display = "none";
     }
 });
 </script>
