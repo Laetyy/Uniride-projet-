@@ -7,9 +7,10 @@
     <div class="photo-card">
         <div class="photo-section">
             <img id="photo-preview" class="profile-photo" src="/static/uploads/default-profile.png" alt="Photo de profil">
+
             <input type="file" id="photo-input" accept=".png,.jpg,.jpeg,.webp">
             <button class="btn" id="upload-btn" type="button">Mettre à jour la photo</button>
-            <p class="small-text">Formats acceptés : PNG, JPG, JPEG, WEBP — max 2 MB</p>
+            <p class="small-text">Formats acceptés : PNG, JPG, JPEG, WEBP</p>
         </div>
     </div>
 
@@ -18,19 +19,24 @@
         <input type="text" id="nom_utilisateur" disabled>
 
         <label>Nom</label>
-        <input type="text" id="nom" disabled>
+        <input type="text" id="nom">
 
         <label>Prénom</label>
-        <input type="text" id="prenom" disabled>
+        <input type="text" id="prenom">
 
         <label>Email</label>
-        <input type="email" id="email" disabled>
+        <input type="email" id="email">
 
         <label>Téléphone</label>
-        <input type="text" id="telephone" disabled>
+        <input type="text" id="telephone" placeholder="+15141234567">
+
+        <label>Bio</label>
+        <textarea id="bio" rows="4" placeholder="Écris quelque chose sur toi..."></textarea>
 
         <label>Rôle</label>
         <input type="text" id="role" disabled>
+
+        <button class="btn" id="save-profile-btn" type="button">Enregistrer le profil</button>
     </div>
 </div>
 
@@ -58,6 +64,7 @@ async function chargerProfil() {
         document.getElementById("prenom").value = data.prenom || "";
         document.getElementById("email").value = data.email || "";
         document.getElementById("telephone").value = data.telephone || "";
+        document.getElementById("bio").value = data.bio || "";
         document.getElementById("role").value = data.role || "";
 
         const photoPreview = document.getElementById("photo-preview");
@@ -110,6 +117,41 @@ uploadBtn.addEventListener("click", async function() {
             localStorage.setItem("user", JSON.stringify(user));
             photoPreview.src = `/static/${result.photo_profil}`;
             alert("✅ Photo mise à jour");
+        } else {
+            alert("❌ " + (result.error || "Erreur"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erreur serveur");
+    }
+});
+
+document.getElementById("save-profile-btn").addEventListener("click", async function() {
+    const data = {
+        nom: document.getElementById("nom").value.trim(),
+        prenom: document.getElementById("prenom").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        telephone: document.getElementById("telephone").value.trim(),
+        bio: document.getElementById("bio").value.trim()
+    };
+
+    try {
+        const response = await fetch(`/profil/${user.id_utilisateur}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            user.nom = result.user.nom;
+            user.prenom = result.user.prenom;
+            user.email = result.user.email;
+            user.telephone = result.user.telephone;
+            localStorage.setItem("user", JSON.stringify(user));
+            alert("✅ Profil mis à jour");
+            chargerProfil();
         } else {
             alert("❌ " + (result.error || "Erreur"));
         }

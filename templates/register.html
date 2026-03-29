@@ -1,28 +1,36 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Inscription - UniRide</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
         <h1>Créer un compte</h1>
 
-        <form id="registerForm">
-            <input type="text" id="nom_utilisateur" placeholder="Nom d'utilisateur (max 10 caractères)" maxlength="10" required>
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="mot_de_passe" placeholder="Mot de passe" required>
+        <form id="registerForm" class="form-block">
+            <label for="nom_utilisateur">Nom d'utilisateur</label>
+            <input type="text" id="nom_utilisateur" placeholder="Max 10 caractères" maxlength="10" required>
+
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="email@example.com" required>
+
+            <label for="mot_de_passe">Mot de passe</label>
+            <input type="password" id="mot_de_passe" placeholder="Majuscule, minuscule, chiffre" required>
+
+            <label for="nom">Nom</label>
             <input type="text" id="nom" placeholder="Nom">
+
+            <label for="prenom">Prénom</label>
             <input type="text" id="prenom" placeholder="Prénom">
+
+            <label for="telephone">Téléphone</label>
             <input type="text" id="telephone" placeholder="+15141234567" required>
+
             <button type="submit" class="btn">S'inscrire</button>
         </form>
 
         <p id="message"></p>
-        <a href="/home">Retour</a>
+        <a class="muted-link" href="/login-page">Déjà un compte ? Se connecter</a>
     </div>
+</div>
 
-    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
-</body>
-</html>
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}

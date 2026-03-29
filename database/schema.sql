@@ -252,3 +252,7 @@ CREATE TABLE ReponsePlainte (
     FOREIGN KEY (id_plainte) REFERENCES Plainte(id_plainte),
     FOREIGN KEY (id_admin) REFERENCES Utilisateur(id_utilisateur)
 );
+
+ALTER TABLE Utilisateur
+ADD COLUMN bio TEXT;
+DESCRIBE Utilisateur;

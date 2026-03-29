@@ -1,18 +1,34 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>UniRide Canada</h2>
-<p>Plateforme de covoiturage.</p>
+<div class="hero-box">
+    <h2>Le covoiturage pour tout le Canada.</h2>
+    <p>
+        Rejoins une plateforme simple, moderne et sécurisée pour trouver un trajet,
+        réserver une place ou publier ton propre voyage.
+    </p>
 
-<div class="home-actions">
-    <a class="btn" href="/register-page">Créer un compte</a>
-    <a class="btn" href="/login-page">Se connecter</a>
-    <a class="btn" href="/trajets-page">Voir les trajets</a>
+    <div class="home-actions">
+        <a class="btn" href="/trajets-page">Trouver un trajet</a>
+        <a class="btn secondary" href="/conducteur-page">Publier un trajet</a>
+        <a class="btn secondary" href="/register-page">Créer un compte</a>
+    </div>
+
+    <div id="welcome-message" class="home-welcome"></div>
 </div>
 
-<div id="welcome-message"></div>
+<div class="card" style="margin-top: 24px;">
+    <h3>Recherche rapide</h3>
+    <div class="two-col">
+        <input type="text" placeholder="Départ">
+        <input type="text" placeholder="Destination">
+    </div>
+    <div class="home-actions">
+        <a class="btn" href="/trajets-page">Voir les trajets</a>
+    </div>
+</div>
 
-<h3>Trajets disponibles</h3>
+<h3 class="section-title">Trajets disponibles</h3>
 <div id="trajets-container"></div>
 
 <script>
@@ -20,7 +36,7 @@ const user = JSON.parse(localStorage.getItem("user"));
 
 if (user) {
     document.getElementById("welcome-message").innerHTML =
-        `<p>Bienvenue ${user.nom_utilisateur || ""} 👋</p>`;
+        `Bienvenue ${user.nom_utilisateur || ""} 👋`;
 }
 
 async function chargerTrajets() {

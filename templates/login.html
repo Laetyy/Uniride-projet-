@@ -1,44 +1,48 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Connexion - UniRide</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
         <h1>Connexion</h1>
 
-        <form id="loginForm">
-            <input type="text" id="identifiant" placeholder="Nom utilisateur / Email / Téléphone" required>
-            <input type="password" id="mot_de_passe" placeholder="Mot de passe" required>
+        <div class="social-buttons">
+            <div class="social-btn">Continuer avec Google</div>
+            <div class="social-btn">Continuer avec Apple</div>
+            <div class="social-btn">Continuer avec Facebook</div>
+        </div>
+
+        <form id="loginForm" class="form-block">
+            <label for="identifiant">Nom utilisateur / Email / Téléphone</label>
+            <input type="text" id="identifiant" placeholder="Entre ton identifiant" required>
+
+            <label for="mot_de_passe">Mot de passe</label>
+            <input type="password" id="mot_de_passe" placeholder="Entre ton mot de passe" required>
+
             <button type="submit" class="btn">Se connecter</button>
         </form>
 
         <p id="message"></p>
-        <a href="/home">Retour</a>
+        <a class="muted-link" href="/register-page">Créer un compte</a>
     </div>
+</div>
 
-    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
-    <script>
-        // Redirection après login réussi
-        document.getElementById("loginForm").addEventListener("submit", async (e) => {
-            const loginBtn = e.target.querySelector("button");
-            const originalText = loginBtn.textContent;
-            loginBtn.disabled = true;
-            loginBtn.textContent = "Chargement...";
-            
-            setTimeout(() => {
-                const user = JSON.parse(localStorage.getItem("user"));
-                if (user) {
-                    alert("✅ Connexion réussie");
-                    window.location.href = "/home";
-                } else {
-                    loginBtn.disabled = false;
-                    loginBtn.textContent = originalText;
-                }
-            }, 500);
-        });
-    </script>
-</body>
-</html>
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+<script>
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    const loginBtn = e.target.querySelector("button");
+    const originalText = loginBtn.textContent;
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Chargement...";
+
+    setTimeout(() => {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (user) {
+            window.location.href = "/home";
+        } else {
+            loginBtn.disabled = false;
+            loginBtn.textContent = originalText;
+        }
+    }, 500);
+});
+</script>
+{% endblock %}

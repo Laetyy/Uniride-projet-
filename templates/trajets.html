@@ -1,17 +1,27 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Trajets - UniRide</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Liste des trajets</h1>
-        <div id="trajetsContainer"></div>
-        <a href="/home">Retour</a>
-    </div>
+{% extends "base.html" %}
 
-    <script src="{{ url_for('static', filename='js/trajets.js') }}"></script>
-</body>
-</html>
+{% block content %}
+<div class="hero-box">
+    <h2>Trouver un trajet</h2>
+    <p>
+        Choisis ton départ, ta destination et réserve facilement ta place
+        avec un conducteur vérifié.
+    </p>
+</div>
+
+<div class="card" style="margin-top: -10px; margin-bottom: 26px;">
+    <h3>Recherche de trajet</h3>
+    <div class="two-col">
+        <input type="text" placeholder="Départ">
+        <input type="text" placeholder="Destination">
+    </div>
+    <div class="home-actions">
+        <button class="btn">Rechercher</button>
+    </div>
+</div>
+
+<h3 class="section-title">Liste des trajets</h3>
+<div id="trajetsContainer"></div>
+
+<script src="{{ url_for('static', filename='js/trajets.js') }}"></script>
+{% endblock %}
