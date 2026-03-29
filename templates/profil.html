@@ -3,15 +3,35 @@
 {% block content %}
 <h2>Mon Profil</h2>
 
-<div class="profile-card">
-    <label>Nom utilisateur</label>
-    <input type="text" id="nom_utilisateur">
+<div class="profile-layout">
+    <div class="photo-card">
+        <div class="photo-section">
+            <img id="photo-preview" class="profile-photo" src="/static/uploads/default-profile.png" alt="Photo de profil">
+            <input type="file" id="photo-input" accept=".png,.jpg,.jpeg,.webp">
+            <button class="btn" id="upload-btn" type="button">Mettre à jour la photo</button>
+            <p class="small-text">Formats acceptés : PNG, JPG, JPEG, WEBP — max 2 MB</p>
+        </div>
+    </div>
 
-    <label>Email</label>
-    <input type="email" id="email">
+    <div class="profile-card">
+        <label>Nom utilisateur</label>
+        <input type="text" id="nom_utilisateur" disabled>
 
-    <label>Rôle</label>
-    <input type="text" id="role" disabled>
+        <label>Nom</label>
+        <input type="text" id="nom" disabled>
+
+        <label>Prénom</label>
+        <input type="text" id="prenom" disabled>
+
+        <label>Email</label>
+        <input type="email" id="email" disabled>
+
+        <label>Téléphone</label>
+        <input type="text" id="telephone" disabled>
+
+        <label>Rôle</label>
+        <input type="text" id="role" disabled>
+    </div>
 </div>
 
 <script>
@@ -20,30 +40,83 @@ const user = JSON.parse(localStorage.getItem("user"));
 if (!user) {
     document.body.innerHTML = "<h2>Accès refusé</h2><p>Veuillez vous connecter.</p>";
 } else {
-    document.getElementById("nom_utilisateur").value = user.nom_utilisateur || "";
-    document.getElementById("email").value = user.email || "";
-    document.getElementById("role").value = user.role || "";
+    chargerProfil();
 }
 
-const phtotoInput = document.getElementById("photo-input");
-const photoPreview = document.getElementById("photo-preview");
+async function chargerProfil() {
+    try {
+        const response = await fetch(`/profil/${user.id_utilisateur}`);
+        const data = await response.json();
 
-phtotoInput.addEventListener("change", function() {
-    const file = this.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            photoPreview.src = e.target.result;
+        if (!response.ok) {
+            alert(data.error || "Erreur chargement profil");
+            return;
         }
-        reader.readAsDataURL(file);
+
+        document.getElementById("nom_utilisateur").value = data.nom_utilisateur || "";
+        document.getElementById("nom").value = data.nom || "";
+        document.getElementById("prenom").value = data.prenom || "";
+        document.getElementById("email").value = data.email || "";
+        document.getElementById("telephone").value = data.telephone || "";
+        document.getElementById("role").value = data.role || "";
+
+        const photoPreview = document.getElementById("photo-preview");
+        if (data.photo_profil) {
+            photoPreview.src = `/static/${data.photo_profil}`;
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erreur serveur");
+    }
+}
+
+const photoInput = document.getElementById("photo-input");
+const photoPreview = document.getElementById("photo-preview");
+const uploadBtn = document.getElementById("upload-btn");
+
+photoInput.addEventListener("change", function() {
+    const file = this.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        photoPreview.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+uploadBtn.addEventListener("click", async function() {
+    const file = photoInput.files[0];
+
+    if (!file) {
+        alert("Choisis une photo d'abord.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("photo", file);
+    formData.append("id_utilisateur", user.id_utilisateur);
+
+    try {
+        const response = await fetch("/upload-photo", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            user.photo_profil = result.photo_profil;
+            localStorage.setItem("user", JSON.stringify(user));
+            photoPreview.src = `/static/${result.photo_profil}`;
+            alert("✅ Photo mise à jour");
+        } else {
+            alert("❌ " + (result.error || "Erreur"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erreur serveur");
     }
 });
-
-document.getElementById("upload-btn").addEventListener("click", function() {
-    document.getElementById("upload-btn").addEventListener("click", function () {
-    alert("Pour l’instant, la photo est affichée seulement en aperçu. On connectera l’upload au backend après.");
-});
-});
-    
 </script>
 {% endblock %}

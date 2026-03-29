@@ -1,3 +1,4 @@
+DROP DATABASE uniride;
 CREATE DATABASE IF NOT EXISTS uniride;
 USE uniride;
 
@@ -23,12 +24,13 @@ DROP TABLE IF EXISTS Utilisateur;
 
 CREATE TABLE Utilisateur (
     id_utilisateur INT AUTO_INCREMENT PRIMARY KEY,
-    nom_utilisateur VARCHAR(50) UNIQUE NOT NULL,
+    nom_utilisateur VARCHAR(10) UNIQUE NOT NULL,
     mot_de_passe VARCHAR(255) NOT NULL,
     nom VARCHAR(50),
     prenom VARCHAR(50),
     email VARCHAR(100) UNIQUE NOT NULL,
-    telephone VARCHAR(20) UNIQUE,
+    telephone VARCHAR(12) UNIQUE,
+    photo_profil VARCHAR(255),
     role ENUM('passager', 'conducteur', 'admin') NOT NULL DEFAULT 'passager',
     statut ENUM('actif', 'suspendu', 'inactif') NOT NULL DEFAULT 'actif',
     date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -76,9 +78,18 @@ CREATE TABLE Vehicule (
 CREATE TABLE DemandeCertification (
     id_demande INT AUTO_INCREMENT PRIMARY KEY,
     id_utilisateur INT NOT NULL,
+
+    numero_permis VARCHAR(50) NOT NULL,
+    date_expiration_permis DATE NOT NULL,
+
+    type_identite ENUM('passeport', 'assurance_maladie') NOT NULL,
+    numero_identite VARCHAR(50) NOT NULL,
+    date_expiration_identite DATE NOT NULL,
+
     date_demande TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     statut_demande ENUM('en_attente', 'acceptee', 'refusee') NOT NULL DEFAULT 'en_attente',
     commentaire_admin TEXT,
+
     FOREIGN KEY (id_utilisateur) REFERENCES Utilisateur(id_utilisateur)
 );
 

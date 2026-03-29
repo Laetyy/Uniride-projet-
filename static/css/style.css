@@ -118,7 +118,7 @@ textarea:focus {
     margin-top: 20px;
 }
 
-/* ===== CARTES GÉNÉRIQUES ===== */
+/* ===== CARTES ===== */
 .card,
 .profile-card,
 .photo-card,
@@ -140,7 +140,8 @@ textarea:focus {
 }
 
 /* ===== TRAJETS ===== */
-#trajets-container {
+#trajets-container,
+#trajetsContainer {
     margin-top: 20px;
 }
 
@@ -210,7 +211,7 @@ textarea:focus {
     margin-top: 20px;
 }
 
-/* ===== BLOCS SPÉCIAUX ===== */
+/* ===== BLOCS ===== */
 .profile-container,
 .dashboard-container {
     background: white;
