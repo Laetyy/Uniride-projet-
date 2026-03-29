@@ -23,17 +23,14 @@ function renderBecomeDriver() {
     container.innerHTML = `
         <div class="dashboard-card">
             <h3>Devenir conducteur</h3>
-            <p>Vous n’êtes pas encore conducteur. Remplissez ce formulaire pour soumettre votre demande de certification.</p>
+            <p>Commencez par remplir les informations du véhicule.</p>
 
-            <form id="certificationForm">
-                <label>Numéro de permis</label>
-                <input type="text" id="numero_permis" placeholder="Ex: P123456789">
-
+            <form id="step1Form">
                 <label>Marque / Modèle</label>
-                <input type="text" id="modele" placeholder="Ex: Toyota Corolla">
+                <input type="text" id="modele" placeholder="Ex: Toyota Corolla" required>
 
                 <label>Type de véhicule</label>
-                <input type="text" id="type_vehicule" placeholder="Ex: Berline">
+                <input type="text" id="type_vehicule" placeholder="Ex: Berline" required>
 
                 <label>Couleur</label>
                 <input type="text" id="couleur" placeholder="Ex: Noir">
@@ -42,38 +39,89 @@ function renderBecomeDriver() {
                 <input type="number" id="annee" placeholder="Ex: 2020">
 
                 <label>Plaque d'immatriculation</label>
-                <input type="text" id="plaque_immatriculation" placeholder="Ex: ABC123">
+                <input type="text" id="plaque_immatriculation" placeholder="Ex: ABC123" required>
 
-                <button type="submit" class="btn">Envoyer la demande</button>
+                <button type="submit" class="btn">Confirmer les informations</button>
             </form>
+
+            <div id="identity-step" style="display:none; margin-top:20px;">
+                <h3>Vérification de l'identité</h3>
+                <p>Veuillez maintenant compléter la vérification de votre identité.</p>
+
+                <form id="step2Form">
+                    <label>Numéro de permis</label>
+                    <input type="text" id="numero_permis" placeholder="Ex: P123456789" required>
+
+                    <label>Date d'expiration du permis</label>
+                    <input type="date" id="date_expiration_permis" required>
+
+                    <label>Type de pièce d'identité</label>
+                    <select id="type_identite" required>
+                        <option value="">Choisir</option>
+                        <option value="passeport">Passeport</option>
+                        <option value="assurance_maladie">Carte d'assurance maladie</option>
+                    </select>
+
+                    <label>Numéro de la pièce d'identité</label>
+                    <input type="text" id="numero_identite" placeholder="Numéro du document" required>
+
+                    <label>Date d'expiration de la pièce d'identité</label>
+                    <input type="date" id="date_expiration_identite" required>
+
+                    <button type="submit" class="btn">Envoyer la demande</button>
+                </form>
+            </div>
         </div>
     `;
 
-    document.getElementById("certificationForm").addEventListener("submit", async function (e) {
+    let vehiculeData = {};
+
+    document.getElementById("step1Form").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        vehiculeData = {
+            modele: document.getElementById("modele").value.trim(),
+            type_vehicule: document.getElementById("type_vehicule").value.trim(),
+            couleur: document.getElementById("couleur").value.trim(),
+            annee: document.getElementById("annee").value,
+            plaque_immatriculation: document.getElementById("plaque_immatriculation").value.trim()
+        };
+
+        document.getElementById("identity-step").style.display = "block";
+        document.getElementById("identity-step").scrollIntoView({ behavior: "smooth" });
+    });
+
+    document.getElementById("step2Form").addEventListener("submit", async function (e) {
         e.preventDefault();
 
         const data = {
             id_utilisateur: user.id_utilisateur,
-            numero_permis: document.getElementById("numero_permis").value,
-            modele: document.getElementById("modele").value,
-            type_vehicule: document.getElementById("type_vehicule").value,
-            couleur: document.getElementById("couleur").value,
-            annee: document.getElementById("annee").value,
-            plaque_immatriculation: document.getElementById("plaque_immatriculation").value
+            ...vehiculeData,
+            numero_permis: document.getElementById("numero_permis").value.trim(),
+            date_expiration_permis: document.getElementById("date_expiration_permis").value,
+            type_identite: document.getElementById("type_identite").value,
+            numero_identite: document.getElementById("numero_identite").value.trim(),
+            date_expiration_identite: document.getElementById("date_expiration_identite").value
         };
 
         try {
             const response = await fetch("/conducteur/demande", {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             });
 
             const result = await response.json();
 
             if (response.ok) {
-                alert("✅ Demande envoyée avec succès");
-                renderPendingDriver();
+                container.innerHTML = `
+                    <div class="dashboard-card">
+                        <h3>Demande en traitement</h3>
+                        <p>Votre demande de certification a bien été envoyée.</p>
+                        <p>Elle est actuellement en cours de traitement par l'administration.</p>
+                        <p><strong>Statut :</strong> en_attente</p>
+                    </div>
+                `;
             } else {
                 alert("❌ " + (result.error || "Erreur"));
             }
@@ -95,6 +143,10 @@ async function renderPendingDriver() {
                 <p>Votre demande de certification a été soumise.</p>
                 <p><strong>Statut :</strong> ${result.statut || "en_attente"}</p>
                 <p><strong>Permis :</strong> ${result.numero_permis || ""}</p>
+                <p><strong>Expiration permis :</strong> ${result.date_expiration_permis || ""}</p>
+                <p><strong>Type d'identité :</strong> ${result.type_identite || ""}</p>
+                <p><strong>Numéro identité :</strong> ${result.numero_identite || ""}</p>
+                <p><strong>Expiration identité :</strong> ${result.date_expiration_identite || ""}</p>
 
                 <button class="btn" id="simulateAccept">Simuler validation admin</button>
             </div>
@@ -131,28 +183,28 @@ function renderDriverDashboard() {
 
                 <form id="trajetForm">
                     <label>ID ville de départ</label>
-                    <input type="number" id="id_ville_depart" placeholder="Ex: 1">
+                    <input type="number" id="id_ville_depart" placeholder="Ex: 1" required>
 
                     <label>ID ville d'arrivée</label>
-                    <input type="number" id="id_ville_arrivee" placeholder="Ex: 2">
+                    <input type="number" id="id_ville_arrivee" placeholder="Ex: 2" required>
 
                     <label>ID véhicule</label>
-                    <input type="number" id="id_vehicule" placeholder="Ex: 1">
+                    <input type="number" id="id_vehicule" placeholder="Ex: 1" required>
 
                     <label>Date</label>
-                    <input type="date" id="date_trajet">
+                    <input type="date" id="date_trajet" required>
 
                     <label>Heure</label>
-                    <input type="time" id="heure_trajet">
+                    <input type="time" id="heure_trajet" required>
 
                     <label>Prix</label>
-                    <input type="number" id="prix" placeholder="Prix">
+                    <input type="number" id="prix" placeholder="Prix" required>
 
                     <label>Places disponibles</label>
-                    <input type="number" id="places_disponibles" placeholder="Places disponibles">
+                    <input type="number" id="places_disponibles" placeholder="Places disponibles" required>
 
                     <label>Ambiance</label>
-                    <select id="ambiance">
+                    <select id="ambiance" required>
                         <option value="calme">Calme</option>
                         <option value="dynamique">Dynamique</option>
                     </select>
@@ -209,7 +261,7 @@ function renderDriverDashboard() {
         try {
             const response = await fetch("/trajets", {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             });
 
@@ -226,9 +278,11 @@ function renderDriverDashboard() {
             console.error(error);
             alert("Erreur serveur");
         }
-        chargerMesTrajets();
     });
+
+    chargerMesTrajets();
 }
+
 async function chargerMesTrajets() {
     const zone = document.getElementById("mes-trajets");
 

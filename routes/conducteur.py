@@ -1,7 +1,15 @@
 from flask import Blueprint, request, jsonify
 from config import get_connection
+from datetime import datetime
 
 conducteur_bp = Blueprint("conducteur", __name__)
+
+
+def parse_date(date_string):
+    try:
+        return datetime.strptime(date_string, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return None
 
 
 @conducteur_bp.route("/conducteur/demande", methods=["POST"])
@@ -14,6 +22,10 @@ def demande_conducteur():
     required_fields = [
         "id_utilisateur",
         "numero_permis",
+        "date_expiration_permis",
+        "type_identite",
+        "numero_identite",
+        "date_expiration_identite",
         "modele",
         "type_vehicule",
         "plaque_immatriculation"
@@ -22,6 +34,25 @@ def demande_conducteur():
     for field in required_fields:
         if not data.get(field):
             return jsonify({"error": f"Le champ {field} est obligatoire"}), 400
+
+    date_expiration_permis = parse_date(data.get("date_expiration_permis"))
+    date_expiration_identite = parse_date(data.get("date_expiration_identite"))
+    today = datetime.today().date()
+
+    if not date_expiration_permis:
+        return jsonify({"error": "La date d'expiration du permis est invalide"}), 400
+
+    if not date_expiration_identite:
+        return jsonify({"error": "La date d'expiration de la pièce d'identité est invalide"}), 400
+
+    if date_expiration_permis <= today:
+        return jsonify({"error": "Le permis est expiré"}), 400
+
+    if date_expiration_identite <= today:
+        return jsonify({"error": "La pièce d'identité est expirée"}), 400
+
+    if data.get("type_identite") not in ["passeport", "assurance_maladie"]:
+        return jsonify({"error": "Le type d'identité est invalide"}), 400
 
     connection = None
     cursor = None
@@ -47,9 +78,24 @@ def demande_conducteur():
             return jsonify({"error": "Une demande est déjà en attente"}), 409
 
         cursor.execute("""
-            INSERT INTO DemandeCertification (id_utilisateur, numero_permis, statut_demande)
-            VALUES (%s, %s, 'en_attente')
-        """, (id_utilisateur, data["numero_permis"]))
+            INSERT INTO DemandeCertification (
+                id_utilisateur,
+                numero_permis,
+                date_expiration_permis,
+                type_identite,
+                numero_identite,
+                date_expiration_identite,
+                statut_demande
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, 'en_attente')
+        """, (
+            id_utilisateur,
+            data["numero_permis"],
+            data["date_expiration_permis"],
+            data["type_identite"],
+            data["numero_identite"],
+            data["date_expiration_identite"]
+        ))
 
         cursor.execute("""
             INSERT INTO Vehicule (
@@ -66,7 +112,7 @@ def demande_conducteur():
             data["modele"],
             data["type_vehicule"],
             data.get("couleur"),
-            data.get("annee"),
+            data.get("annee") if data.get("annee") else None,
             data["plaque_immatriculation"]
         ))
 
@@ -96,7 +142,15 @@ def statut_conducteur(id_utilisateur):
         cursor = connection.cursor()
 
         cursor.execute("""
-            SELECT statut_demande, numero_permis, commentaire_admin, date_demande
+            SELECT
+                statut_demande,
+                numero_permis,
+                date_expiration_permis,
+                type_identite,
+                numero_identite,
+                date_expiration_identite,
+                commentaire_admin,
+                date_demande
             FROM DemandeCertification
             WHERE id_utilisateur = %s
             ORDER BY date_demande DESC
@@ -107,9 +161,18 @@ def statut_conducteur(id_utilisateur):
         if not demande:
             return jsonify({"statut": "aucune_demande"}), 200
 
+        if demande.get("date_expiration_permis"):
+            demande["date_expiration_permis"] = str(demande["date_expiration_permis"])
+        if demande.get("date_expiration_identite"):
+            demande["date_expiration_identite"] = str(demande["date_expiration_identite"])
+
         return jsonify({
             "statut": demande["statut_demande"],
             "numero_permis": demande["numero_permis"],
+            "date_expiration_permis": demande["date_expiration_permis"],
+            "type_identite": demande["type_identite"],
+            "numero_identite": demande["numero_identite"],
+            "date_expiration_identite": demande["date_expiration_identite"],
             "commentaire_admin": demande["commentaire_admin"]
         }), 200
 
