@@ -1,9 +1,19 @@
 USE uniride;
 
-INSERT INTO Utilisateur (nom_utilisateur, mot_de_passe, email)
+INSERT INTO Utilisateur (nom_utilisateur, mot_de_passe, email, telephone, role)
 VALUES
-('laeticia', 'scrypt:32768:8:1$mOZJkJWMq4NdWgej$8cd7104ba85c77cfbe95ba8e311a0178d23ac123cafe549ed625e3374de19a39d1702a1ed0beb9f1add1935a3ad92abe838c582e36a340e85f646cfd3d14627e', 'laeticia@mail.com'),
-('user2', 'scrypt:32768:8:1$mOZJkJWMq4NdWgej$8cd7104ba85c77cfbe95ba8e311a0178d23ac123cafe549ed625e3374de19a39d1702a1ed0beb9f1add1935a3ad92abe838c582e36a340e85f646cfd3d14627e', 'user2@mail.com');
+('laeticia', 'scrypt:32768:8:1$mOZJkJWMq4NdWgej$8cd7104ba85c77cfbe95ba8e311a0178d23ac123cafe549ed625e3374de19a39d1702a1ed0beb9f1add1935a3ad92abe838c582e36a340e85f646cfd3d14627e', 'laeticia@mail.com', '+15140000001', 'passager'),
+
+('user2', 'scrypt:32768:8:1$mOZJkJWMq4NdWgej$8cd7104ba85c77cfbe95ba8e311a0178d23ac123cafe549ed625e3374de19a39d1702a1ed0beb9f1add1935a3ad92abe838c582e36a340e85f646cfd3d14627e', 'user2@mail.com', '+15140000002', 'passager'),
+
+('driver1', 'scrypt:hash', 'driver1@gmail.com', '+15140000003', 'conducteur'),
+('driver2', 'scrypt:hash', 'driver2@gmail.com', '+15140000004', 'conducteur'),
+
+('client1', 'scrypt:hash', 'client1@gmail.com', '+15140000005', 'passager'),
+('client2', 'scrypt:hash', 'client2@gmail.com', '+15140000006', 'passager'),
+
+('admin1', 'scrypt:hash', 'admin@gmail.com', '+15140000007', 'admin');
+
 
 INSERT INTO Ville (nom_ville, province)
 VALUES
@@ -59,10 +69,17 @@ VALUES
 ('Saint John', 'NB'),
 ('Charlottetown', 'PE');
 
+DELETE FROM Wallet;
+
 INSERT INTO Wallet (id_utilisateur, solde_argent, solde_points)
 VALUES
-(1, 100.00, 50),
-(2, 50.00, 20);
+(2, 50.00, 20),
+(3, 200.00, 100),
+(4, 150.00, 80),
+(5, 75.00, 30),
+(6, 60.00, 25),
+(7, 500.00, 200);
+
 
 INSERT INTO Vehicule (id_utilisateur, modele, type_vehicule, plaque_immatriculation)
 VALUES
@@ -77,10 +94,18 @@ INSERT INTO Trajet (
     heure_trajet,
     prix,
     places_disponibles,
-    ambiance
+    ambiance,
+    musique,
+    telephone_autorise,
+    statut
 )
 VALUES
-(1, 1, 2, 1, '2026-03-25', '10:00:00', 25.00, 3, 'calme');
+(3, 1, 2, 1, '2026-04-01', '10:00:00', 25.00, 3, 'calme', TRUE, TRUE, 'actif'),
+(4, 2, 1, 2, '2026-04-02', '14:00:00', 30.00, 2, 'dynamique', TRUE, FALSE, 'actif'),
+(3, 1, 2, 1, '2026-04-03', '18:00:00', 20.00, 4, 'calme', FALSE, TRUE, 'actif'),
+(4, 2, 1, 2, '2026-04-04', '09:30:00', 28.00, 1, 'dynamique', TRUE, TRUE, 'actif');
+
+
 
 INSERT INTO Reservation (id_trajet, id_passager, nb_places)
 VALUES

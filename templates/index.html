@@ -54,6 +54,7 @@ async function chargerTrajets() {
                 <p><strong>Prix :</strong> ${trajet.prix}$</p>
                 <p><strong>Places :</strong> ${trajet.places_disponibles}</p>
                 <p><strong>Ambiance :</strong> ${trajet.ambiance}</p>
+                <button class="btn" onclick="reserver(${trajet.id_trajet})">Réserver</button>
             `;
 
             container.appendChild(card);
@@ -62,6 +63,41 @@ async function chargerTrajets() {
     } catch (error) {
         container.innerHTML = "<p>Erreur serveur lors du chargement des trajets.</p>";
         console.error(error);
+    }
+}
+
+async function reserver(id_trajet) {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user) {
+        alert("❌ Connecte-toi d'abord");
+        return;
+    }
+
+    const data = {
+        id_trajet: id_trajet,
+        id_passager: user.id_utilisateur,
+        nb_places: 1
+    };
+
+    try {
+        const response = await fetch("/reservation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert("✅ Réservation réussie");
+            chargerTrajets();
+        } else {
+            alert("❌ " + (result.error || "Erreur"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erreur serveur");
     }
 }
 
