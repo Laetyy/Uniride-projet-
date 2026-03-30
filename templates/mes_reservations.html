@@ -50,6 +50,7 @@ async function chargerReservations() {
                 <p><strong>Places réservées :</strong> ${reservation.nb_places}</p>
                 <p><strong>Statut :</strong> ${reservation.statut}</p>
                 <p><strong>Date de réservation :</strong> ${reservation.date_reservation}</p>
+                <button class="btn danger" onclick="annulerReservation(${reservation.id_reservation})">❌ Annuler</button>
             `;
 
             container.appendChild(card);
@@ -57,6 +58,30 @@ async function chargerReservations() {
     } catch (error) {
         console.error(error);
         container.innerHTML = "<p>Erreur serveur lors du chargement des réservations.</p>";
+    }
+}
+
+async function annulerReservation(id_reservation) {
+    const confirmation = confirm("Tu veux vraiment annuler cette réservation ?");
+
+    if (!confirmation) return;
+
+    try {
+        const response = await fetch(`/reservation/${id_reservation}`, {
+            method: "DELETE"
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert("✅ Réservation annulée");
+            chargerReservations();
+        } else {
+            alert("❌ " + (result.error || "Erreur"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erreur serveur");
     }
 }
 </script>

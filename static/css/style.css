@@ -560,3 +560,17 @@ textarea:focus {
         align-items: flex-start;
     }
 }
+/* ============================= */
+/* ===== BOUTON ANNULER ===== */
+/* ============================= */
+
+.btn.danger {
+    background: #e74c3c;
+    color: white;
+    border: none;
+}
+
+.btn.danger:hover {
+    background: #c0392b;
+    transform: translateY(-1px);
+}
