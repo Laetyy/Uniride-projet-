@@ -20,6 +20,7 @@ def get_trajets():
                 u.nom_utilisateur AS conducteur,
                 vd.nom_ville AS ville_depart,
                 va.nom_ville AS ville_arrivee,
+                t.vehicule,
                 t.date_trajet,
                 t.heure_trajet,
                 t.prix,
@@ -66,7 +67,7 @@ def create_trajet():
         "id_conducteur",
         "id_ville_depart",
         "id_ville_arrivee",
-        "id_vehicule",
+        "vehicule",
         "date_trajet",
         "heure_trajet",
         "prix",
@@ -75,8 +76,12 @@ def create_trajet():
     ]
 
     for field in required_fields:
-        if data.get(field) is None:
+        value = data.get(field)
+        if value is None or (isinstance(value, str) and not value.strip()):
             return jsonify({"error": f"Le champ {field} est obligatoire"}), 400
+
+    if str(data["id_ville_depart"]) == str(data["id_ville_arrivee"]):
+        return jsonify({"error": "La ville de départ et la ville d'arrivée doivent être différentes"}), 400
 
     connection = None
     cursor = None
@@ -90,7 +95,7 @@ def create_trajet():
                 id_conducteur,
                 id_ville_depart,
                 id_ville_arrivee,
-                id_vehicule,
+                vehicule,
                 date_trajet,
                 heure_trajet,
                 prix,
@@ -105,14 +110,14 @@ def create_trajet():
             data["id_conducteur"],
             data["id_ville_depart"],
             data["id_ville_arrivee"],
-            data["id_vehicule"],
+            data["vehicule"].strip(),
             data["date_trajet"],
             data["heure_trajet"],
             data["prix"],
             data["places_disponibles"],
             data["ambiance"],
-            data.get("musique", True),
-            data.get("telephone_autorise", True),
+            data.get("musique", False),
+            data.get("telephone_autorise", False),
             data.get("statut", "actif")
         ))
 

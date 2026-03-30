@@ -208,3 +208,4 @@ def upload_photo():
             cursor.close()
         if connection:
             connection.close()
+

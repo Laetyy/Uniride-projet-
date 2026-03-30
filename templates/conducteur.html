@@ -178,50 +178,101 @@ async function renderPendingDriver() {
 function renderDriverDashboard() {
     container.innerHTML = `
         <div class="dashboard-conducteur">
-            <div class="dashboard-card">
+            <div class="dashboard-card trip-form-section">
                 <h3>Publier un trajet</h3>
+                <p class="subtitle">Proposez votre trajet et remplissez vos places disponibles.</p>
 
-                <form id="trajetForm">
-                    <label>ID ville de départ</label>
-                    <input type="number" id="id_ville_depart" placeholder="Ex: 1" required>
+                <form id="trajetForm" class="trip-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="id_ville_depart">Ville de départ</label>
+                            <select id="id_ville_depart" required>
+                                <option value="">Choisir une ville</option>
+                                <option value="1">Montréal</option>
+                                <option value="2">Québec</option>
+                                <option value="3">Laval</option>
+                                <option value="4">Gatineau</option>
+                                <option value="5">Sherbrooke</option>
+                                <option value="6">Trois-Rivières</option>
+                                <option value="7">Ottawa</option>
+                                <option value="8">Toronto</option>
+                            </select>
+                        </div>
 
-                    <label>ID ville d'arrivée</label>
-                    <input type="number" id="id_ville_arrivee" placeholder="Ex: 2" required>
+                        <div class="form-group">
+                            <label for="id_ville_arrivee">Ville d'arrivée</label>
+                            <select id="id_ville_arrivee" required>
+                                <option value="">Choisir une ville</option>
+                                <option value="1">Montréal</option>
+                                <option value="2">Québec</option>
+                                <option value="3">Laval</option>
+                                <option value="4">Gatineau</option>
+                                <option value="5">Sherbrooke</option>
+                                <option value="6">Trois-Rivières</option>
+                                <option value="7">Ottawa</option>
+                                <option value="8">Toronto</option>
+                            </select>
+                        </div>
+                    </div>
 
-                    <label>ID véhicule</label>
-                    <input type="number" id="id_vehicule" placeholder="Ex: 1" required>
+                    <div class="form-group">
+                        <label for="vehicule">Véhicule</label>
+                        <input type="text" id="vehicule" placeholder="Ex : Toyota Corolla 2020" required>
+                    </div>
 
-                    <label>Date</label>
-                    <input type="date" id="date_trajet" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="date_trajet">Date</label>
+                            <input type="date" id="date_trajet" required>
+                        </div>
 
-                    <label>Heure</label>
-                    <input type="time" id="heure_trajet" required>
+                        <div class="form-group">
+                            <label for="heure_trajet">Heure</label>
+                            <input type="time" id="heure_trajet" required>
+                        </div>
+                    </div>
 
-                    <label>Prix</label>
-                    <input type="number" id="prix" placeholder="Prix" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="prix">Prix par place</label>
+                            <input type="number" id="prix" step="0.01" min="0" placeholder="Ex : 25.00" required>
+                        </div>
 
-                    <label>Places disponibles</label>
-                    <input type="number" id="places_disponibles" placeholder="Places disponibles" required>
+                        <div class="form-group">
+                            <label for="places_disponibles">Places disponibles</label>
+                            <select id="places_disponibles" required>
+                                <option value="">Choisir</option>
+                                <option value="1">1 place</option>
+                                <option value="2">2 places</option>
+                                <option value="3">3 places</option>
+                                <option value="4">4 places</option>
+                            </select>
+                        </div>
+                    </div>
 
-                    <label>Ambiance</label>
-                    <select id="ambiance" required>
-                        <option value="calme">Calme</option>
-                        <option value="dynamique">Dynamique</option>
-                    </select>
+                    <div class="form-group">
+                        <label for="ambiance">Ambiance</label>
+                        <select id="ambiance" required>
+                            <option value="calme">Calme</option>
+                            <option value="dynamique">Dynamique</option>
+                        </select>
+                    </div>
 
-                    <label>Musique</label>
-                    <select id="musique">
-                        <option value="true">Oui</option>
-                        <option value="false">Non</option>
-                    </select>
+                    <div class="options-box">
+                        <p class="options-title">Préférences du trajet</p>
 
-                    <label>Téléphone autorisé</label>
-                    <select id="telephone_autorise">
-                        <option value="true">Oui</option>
-                        <option value="false">Non</option>
-                    </select>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="musique">
+                            <span>Musique autorisée</span>
+                        </label>
 
-                    <button type="submit" class="btn">Publier le trajet</button>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="telephone_autorise">
+                            <span>Appels autorisés</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn publish-btn">Publier le trajet</button>
                 </form>
             </div>
 
@@ -248,15 +299,20 @@ function renderDriverDashboard() {
             id_conducteur: user.id_utilisateur,
             id_ville_depart: document.getElementById("id_ville_depart").value,
             id_ville_arrivee: document.getElementById("id_ville_arrivee").value,
-            id_vehicule: document.getElementById("id_vehicule").value,
+            vehicule: document.getElementById("vehicule").value.trim(),
             date_trajet: document.getElementById("date_trajet").value,
             heure_trajet: document.getElementById("heure_trajet").value,
             prix: document.getElementById("prix").value,
             places_disponibles: document.getElementById("places_disponibles").value,
             ambiance: document.getElementById("ambiance").value,
-            musique: document.getElementById("musique").value === "true",
-            telephone_autorise: document.getElementById("telephone_autorise").value === "true"
+            musique: document.getElementById("musique").checked,
+            telephone_autorise: document.getElementById("telephone_autorise").checked
         };
+
+        if (data.id_ville_depart === data.id_ville_arrivee) {
+            alert("❌ La ville de départ et la ville d'arrivée doivent être différentes.");
+            return;
+        }
 
         try {
             const response = await fetch("/trajets", {

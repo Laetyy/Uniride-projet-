@@ -114,3 +114,17 @@ VALUES
 INSERT INTO Paiement (id_reservation, montant_argent, mode_paiement)
 VALUES
 (1, 25.00, 'argent');
+
+ALTER TABLE Trajet ADD COLUMN vehicule VARCHAR(100) NOT NULL;
+
+UPDATE Trajet SET vehicule = 'Toyota Corolla' WHERE id_trajet IN (1, 3);
+UPDATE Trajet SET vehicule = 'Honda Civic' WHERE id_trajet IN (2, 4);
+
+SHOW CREATE TABLE Trajet;
+USE uniride;
+
+ALTER TABLE Trajet DROP FOREIGN KEY trajet_ibfk_4;
+ALTER TABLE Trajet DROP COLUMN id_vehicule;
+
+SHOW CREATE TABLE Trajet;
+DESCRIBE Trajet;

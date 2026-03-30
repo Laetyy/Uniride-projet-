@@ -1,5 +1,8 @@
 async function loadTrajets() {
     const container = document.getElementById("trajetsContainer");
+
+    if (!container) return;
+
     container.innerHTML = "Chargement...";
 
     try {
@@ -7,6 +10,11 @@ async function loadTrajets() {
         const trajets = await response.json();
 
         container.innerHTML = "";
+
+        if (!response.ok) {
+            container.innerHTML = `<p>Erreur : ${trajets.error || "Impossible de charger les trajets."}</p>`;
+            return;
+        }
 
         if (!trajets.length) {
             container.innerHTML = "<p>Aucun trajet disponible.</p>";
@@ -19,12 +27,15 @@ async function loadTrajets() {
 
             div.innerHTML = `
                 <h3>${trajet.ville_depart} → ${trajet.ville_arrivee}</h3>
-                <p><strong>Conducteur :</strong> ${trajet.conducteur}</p>
+                <p><strong>Conducteur :</strong> ${trajet.conducteur || "Non indiqué"}</p>
+                <p><strong>Véhicule :</strong> ${trajet.vehicule || "Non indiqué"}</p>
                 <p><strong>Date :</strong> ${trajet.date_trajet}</p>
                 <p><strong>Heure :</strong> ${trajet.heure_trajet}</p>
                 <p><strong>Prix :</strong> ${trajet.prix} $</p>
-                <p><strong>Places :</strong> ${trajet.places_disponibles}</p>
-                <p><strong>Ambiance :</strong> ${trajet.ambiance}</p>
+                <p><strong>Places disponibles :</strong> ${trajet.places_disponibles}</p>
+                <p><strong>Ambiance :</strong> ${trajet.ambiance || "Non indiquée"}</p>
+                <p><strong>Musique :</strong> ${trajet.musique ? "Oui" : "Non"}</p>
+                <p><strong>Appels autorisés :</strong> ${trajet.telephone_autorise ? "Oui" : "Non"}</p>
 
                 <button class="btn" onclick="reserver(${trajet.id_trajet})">
                     Réserver
@@ -35,11 +46,11 @@ async function loadTrajets() {
         });
 
     } catch (error) {
-        container.innerHTML = "<p>Erreur de chargement : " + error.message + "</p>";
+        container.innerHTML = `<p>Erreur de chargement : ${error.message}</p>`;
+        console.error(error);
     }
 }
 
-// 🔥 fonction réservation
 async function reserver(id_trajet) {
     const user = JSON.parse(localStorage.getItem("user"));
 
@@ -57,7 +68,9 @@ async function reserver(id_trajet) {
     try {
         const response = await fetch("/reservation", {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify(data)
         });
 
@@ -65,14 +78,14 @@ async function reserver(id_trajet) {
 
         if (response.ok) {
             alert("✅ Réservation réussie");
-            loadTrajets(); // recharge les trajets (places mises à jour)
+            loadTrajets();
         } else {
             alert("❌ " + (result.error || "Erreur"));
         }
 
     } catch (error) {
-        alert("Erreur serveur");
         console.error(error);
+        alert("Erreur serveur");
     }
 }
 
