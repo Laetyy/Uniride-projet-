@@ -31,6 +31,20 @@
     </div>
 </div>
 
+<div class="dashboard-card">
+    <h3>Wallets</h3>
+    <div id="admin-wallets">
+        <p>Chargement des wallets...</p>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <h3>Plaintes</h3>
+    <div id="admin-plaintes">
+        <p>Chargement des plaintes...</p>
+    </div>
+</div>
+
 <script>
 async function chargerStatsAdmin() {
     const zone = document.getElementById("admin-stats");
@@ -50,6 +64,7 @@ async function chargerStatsAdmin() {
             <p><strong>Total trajets :</strong> ${stats.total_trajets}</p>
             <p><strong>Total réservations :</strong> ${stats.total_reservations}</p>
             <p><strong>Demandes en attente :</strong> ${stats.demandes_en_attente}</p>
+            <p><strong>Plaintes ouvertes / traitées :</strong> ${stats.plaintes_ouvertes}</p>
         `;
     } catch (error) {
         zone.innerHTML = "<p>Erreur chargement statistiques.</p>";
@@ -131,7 +146,9 @@ async function chargerDemandes() {
                 <p><strong>Expiration permis :</strong> ${demande.date_expiration_permis}</p>
                 <p><strong>Type identité :</strong> ${demande.type_identite}</p>
                 <p><strong>Numéro identité :</strong> ${demande.numero_identite}</p>
+                <p><strong>Expiration identité :</strong> ${demande.date_expiration_identite}</p>
                 <p><strong>Statut :</strong> ${demande.statut_demande}</p>
+                <p><strong>Commentaire admin :</strong> ${demande.commentaire_admin || "Aucun"}</p>
                 <div class="home-actions">
                     <button class="btn" onclick="accepterDemande(${demande.id_demande})">Accepter</button>
                     <button class="btn secondary" onclick="refuserDemande(${demande.id_demande})">Refuser</button>
@@ -185,6 +202,93 @@ async function chargerTrajetsAdmin() {
 
     } catch (error) {
         zone.innerHTML = "<p>Erreur chargement trajets.</p>";
+        console.error(error);
+    }
+}
+
+async function chargerWallets() {
+    const zone = document.getElementById("admin-wallets");
+
+    try {
+        const response = await fetch("/admin/wallets");
+        const wallets = await response.json();
+
+        if (!response.ok) {
+            zone.innerHTML = `<p>Erreur : ${wallets.error}</p>`;
+            return;
+        }
+
+        if (wallets.length === 0) {
+            zone.innerHTML = "<p>Aucun wallet trouvé.</p>";
+            return;
+        }
+
+        zone.innerHTML = "";
+
+        wallets.forEach(wallet => {
+            const card = document.createElement("div");
+            card.className = "trajet-card";
+
+            card.innerHTML = `
+                <h4>${wallet.nom_utilisateur}</h4>
+                <p><strong>Email :</strong> ${wallet.email}</p>
+                <p><strong>Solde argent :</strong> ${wallet.solde_argent}$</p>
+                <p><strong>Solde points :</strong> ${wallet.solde_points}</p>
+                <div class="home-actions">
+                    <button class="btn secondary" onclick="ajusterWallet(${wallet.id_wallet})">Ajuster le wallet</button>
+                </div>
+            `;
+
+            zone.appendChild(card);
+        });
+
+    } catch (error) {
+        zone.innerHTML = "<p>Erreur chargement wallets.</p>";
+        console.error(error);
+    }
+}
+
+async function chargerPlaintes() {
+    const zone = document.getElementById("admin-plaintes");
+
+    try {
+        const response = await fetch("/admin/plaintes");
+        const plaintes = await response.json();
+
+        if (!response.ok) {
+            zone.innerHTML = `<p>Erreur : ${plaintes.error}</p>`;
+            return;
+        }
+
+        if (plaintes.length === 0) {
+            zone.innerHTML = "<p>Aucune plainte trouvée.</p>";
+            return;
+        }
+
+        zone.innerHTML = "";
+
+        plaintes.forEach(plainte => {
+            const card = document.createElement("div");
+            card.className = "trajet-card";
+
+            card.innerHTML = `
+                <h4>${plainte.sujet}</h4>
+                <p><strong>Utilisateur :</strong> ${plainte.nom_utilisateur}</p>
+                <p><strong>Email :</strong> ${plainte.email}</p>
+                <p><strong>Description :</strong> ${plainte.description}</p>
+                <p><strong>Date :</strong> ${plainte.date_plainte}</p>
+                <p><strong>Statut :</strong> ${plainte.statut_plainte}</p>
+                <div class="home-actions">
+                    <button class="btn" onclick="changerStatutPlainte(${plainte.id_plainte}, 'traitee')">Marquer traitée</button>
+                    <button class="btn secondary" onclick="changerStatutPlainte(${plainte.id_plainte}, 'fermee')">Fermer</button>
+                </div>
+            `;
+
+            zone.appendChild(card);
+        });
+
+    } catch (error) {
+        zone.innerHTML = "<p>Erreur chargement plaintes.</p>";
         console.error(error);
     }
 }
@@ -274,9 +378,64 @@ async function refuserDemande(id_demande) {
     }
 }
 
+async function ajusterWallet(id_wallet) {
+    const montant_argent = prompt("Montant argent à ajouter (ou négatif pour retirer) :", "0");
+    const montant_points = prompt("Montant points à ajouter (ou négatif pour retirer) :", "0");
+    const description = prompt("Description de l’ajustement :", "Ajustement admin") || "Ajustement admin";
+
+    try {
+        const response = await fetch(`/admin/wallet/${id_wallet}/ajuster`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                montant_argent: montant_argent,
+                montant_points: montant_points,
+                description: description
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert("✅ " + result.message);
+            chargerWallets();
+        } else {
+            alert("❌ " + (result.error || "Erreur"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erreur serveur");
+    }
+}
+
+async function changerStatutPlainte(id_plainte, statut) {
+    try {
+        const response = await fetch(`/admin/plainte/${id_plainte}/statut`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ statut_plainte: statut })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert("✅ " + result.message);
+            chargerPlaintes();
+            chargerStatsAdmin();
+        } else {
+            alert("❌ " + (result.error || "Erreur"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erreur serveur");
+    }
+}
+
 chargerStatsAdmin();
 chargerUtilisateurs();
 chargerDemandes();
 chargerTrajetsAdmin();
+chargerWallets();
+chargerPlaintes();
 </script>
 {% endblock %}

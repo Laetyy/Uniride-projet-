@@ -128,3 +128,145 @@ ALTER TABLE Trajet DROP COLUMN id_vehicule;
 
 SHOW CREATE TABLE Trajet;
 DESCRIBE Trajet;
+
+-- =========================
+-- DEMANDES DE CERTIFICATION
+-- =========================
+INSERT INTO DemandeCertification (
+    id_utilisateur,
+    numero_permis,
+    date_expiration_permis,
+    type_identite,
+    numero_identite,
+    date_expiration_identite,
+    statut_demande,
+    commentaire_admin
+)
+VALUES
+(2, 'P123456789', '2028-05-20', 'passeport', 'AA123456', '2029-08-15', 'en_attente', NULL),
+(5, 'Q987654321', '2027-11-10', 'assurance_maladie', 'RAMQ998877', '2028-02-01', 'refusee', 'Photo du document non claire'),
+(6, 'L456789123', '2029-01-12', 'passeport', 'BB998877', '2030-06-30', 'acceptee', 'Certification validée');
+
+-- =========================
+-- PLAINTES
+-- =========================
+INSERT INTO Plainte (
+    id_utilisateur,
+    sujet,
+    description,
+    statut_plainte
+)
+VALUES
+(2, 'Problème de paiement', 'Le paiement du trajet ne s’est pas affiché correctement.', 'ouverte'),
+(5, 'Conducteur en retard', 'Le conducteur est arrivé avec plus de 30 minutes de retard.', 'traitee'),
+(6, 'Comportement inapproprié', 'Un passager a eu un comportement irrespectueux.', 'fermee');
+
+-- =========================
+-- REPONSES PLAINTES
+-- =========================
+INSERT INTO ReponsePlainte (
+    id_plainte,
+    id_admin,
+    message_reponse
+)
+VALUES
+(2, 7, 'La plainte a été analysée et le conducteur a été averti.'),
+(3, 7, 'Le dossier est fermé après vérification.');
+
+-- =========================
+-- WALLETS MANQUANTS
+-- =========================
+INSERT INTO Wallet (id_utilisateur, solde_argent, solde_points)
+VALUES
+(1, 100.00, 50)
+ON DUPLICATE KEY UPDATE
+solde_argent = VALUES(solde_argent),
+solde_points = VALUES(solde_points);
+
+-- =========================
+-- HISTORIQUE WALLET
+-- =========================
+INSERT INTO HistoriqueWallet (
+    id_wallet,
+    type_operation,
+    montant_argent,
+    montant_points,
+    description
+)
+VALUES
+(1, 'depot', 100.00, 0, 'Dépôt initial utilisateur 1'),
+(2, 'paiement', 25.00, 0, 'Paiement réservation trajet 1'),
+(3, 'ajustement', 10.00, 20, 'Ajustement manuel administrateur'),
+(4, 'reception', 15.00, 10, 'Récompense après trajet complété'),
+(5, 'remboursement', 20.00, 0, 'Remboursement réservation annulée'),
+(6, 'paiement', 30.00, 0, 'Paiement réservation trajet 2');
+
+-- =========================
+-- EVALUATIONS
+-- =========================
+INSERT INTO Evaluation (
+    id_trajet,
+    id_passager,
+    id_conducteur,
+    note,
+    commentaire
+)
+VALUES
+(1, 2, 3, 5, 'Très bon trajet, conducteur ponctuel et sympathique.'),
+(2, 5, 4, 4, 'Trajet agréable, voiture propre.'),
+(3, 6, 3, 3, 'Correct, mais un peu de retard au départ.');
+
+-- =========================
+-- REPONSES AUX AVIS
+-- =========================
+INSERT INTO ReponseAvis (
+    id_evaluation,
+    id_conducteur,
+    commentaire_reponse
+)
+VALUES
+(1, 3, 'Merci beaucoup pour votre retour !'),
+(2, 4, 'Merci, au plaisir de vous revoir pour un autre trajet.');
+
+-- =========================
+-- QUESTIONS D’AIDE
+-- =========================
+INSERT INTO QuestionAide (
+    id_utilisateur,
+    sujet,
+    message,
+    statut_question
+)
+VALUES
+(2, 'Problème de connexion', 'Je n’arrive pas à me reconnecter après avoir changé mon mot de passe.', 'ouverte'),
+(5, 'Question sur les points', 'Comment utiliser mes points pour payer un trajet ?', 'traitee'),
+(6, 'Photo de profil', 'Pourquoi ma photo de profil ne se met pas à jour ?', 'fermee');
+
+-- =========================
+-- CONVERSATIONS
+-- =========================
+INSERT INTO Conversation (
+    id_passager,
+    id_conducteur,
+    id_trajet
+)
+VALUES
+(2, 3, 1),
+(5, 4, 2),
+(6, 3, 3);
+
+-- =========================
+-- MESSAGES
+-- =========================
+INSERT INTO Message (
+    id_conversation,
+    id_expediteur,
+    contenu
+)
+VALUES
+(1, 2, 'Bonjour, est-ce que le point de départ exact est bien au centre-ville ?'),
+(1, 3, 'Bonjour, oui exactement près de la gare.'),
+(2, 5, 'Bonsoir, avez-vous encore une place pour demain ?'),
+(2, 4, 'Oui, il reste une place disponible.'),
+(3, 6, 'Est-ce que vous acceptez les valises ?'),
+(3, 3, 'Oui, une valise cabine sans problème.');
