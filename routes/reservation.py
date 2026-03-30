@@ -149,3 +149,52 @@ def get_reservations_passager(id_passager):
             cursor.close()
         if connection:
             connection.close()
+
+
+@reservation_bp.route("/reservation/<int:id_reservation>", methods=["DELETE"])
+def annuler_reservation(id_reservation):
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        connection.begin()
+
+        cursor.execute("""
+            SELECT id_trajet, nb_places
+            FROM Reservation
+            WHERE id_reservation = %s
+        """, (id_reservation,))
+        reservation = cursor.fetchone()
+
+        if not reservation:
+            connection.rollback()
+            return jsonify({"error": "Réservation introuvable"}), 404
+
+        cursor.execute("""
+            UPDATE Trajet
+            SET places_disponibles = places_disponibles + %s,
+                statut = 'actif'
+            WHERE id_trajet = %s
+        """, (reservation["nb_places"], reservation["id_trajet"]))
+
+        cursor.execute("""
+            DELETE FROM Reservation
+            WHERE id_reservation = %s
+        """, (id_reservation,))
+
+        connection.commit()
+
+        return jsonify({"message": "Réservation annulée avec succès"}), 200
+
+    except Exception as e:
+        if connection:
+            connection.rollback()
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
