@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Administration UniRide</h2>
+
+<div class="dashboard-card">
+    <h3>Statistiques</h3>
+    <div id="admin-stats">
+        <p>Chargement des statistiques...</p>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <h3>Utilisateurs</h3>
+    <div id="admin-users">
+        <p>Chargement des utilisateurs...</p>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <h3>Demandes de certification</h3>
+    <div id="admin-demandes">
+        <p>Chargement des demandes...</p>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <h3>Trajets</h3>
+    <div id="admin-trajets">
+        <p>Chargement des trajets...</p>
+    </div>
+</div>
+
+<script>
+async function chargerStatsAdmin() {
+    const zone = document.getElementById("admin-stats");
+
+    try {
+        const response = await fetch("/admin/stats");
+        const stats = await response.json();
+
+        if (!response.ok) {
+            zone.innerHTML = `<p>Erreur : ${stats.error}</p>`;
+            return;
+        }
+
+        zone.innerHTML = `
+            <p><strong>Total utilisateurs :</strong> ${stats.total_utilisateurs}</p>
+            <p><strong>Total conducteurs :</strong> ${stats.total_conducteurs}</p>
+            <p><strong>Total trajets :</strong> ${stats.total_trajets}</p>
+            <p><strong>Total réservations :</strong> ${stats.total_reservations}</p>
+            <p><strong>Demandes en attente :</strong> ${stats.demandes_en_attente}</p>
+        `;
+    } catch (error) {
+        zone.innerHTML = "<p>Erreur chargement statistiques.</p>";
+        console.error(error);
+    }
+}
+
+async function chargerUtilisateurs() {
+    const zone = document.getElementById("admin-users");
+
+    try {
+        const response = await fetch("/admin/utilisateurs");
+        const utilisateurs = await response.json();
+
+        if (!response.ok) {
+            zone.innerHTML = `<p>Erreur : ${utilisateurs.error}</p>`;
+            return;
+        }
+
+        if (utilisateurs.length === 0) {
+            zone.innerHTML = "<p>Aucun utilisateur trouvé.</p>";
+            return;
+        }
+
+        zone.innerHTML = "";
+
+        utilisateurs.forEach(user => {
+            const card = document.createElement("div");
+            card.className = "trajet-card";
+
+            card.innerHTML = `
+                <h4>${user.nom_utilisateur}</h4>
+                <p><strong>Email :</strong> ${user.email}</p>
+                <p><strong>Téléphone :</strong> ${user.telephone || "Non renseigné"}</p>
+                <p><strong>Rôle :</strong> ${user.role}</p>
+                <p><strong>Statut :</strong> ${user.statut}</p>
+                <div class="home-actions">
+                    <button class="btn secondary" onclick="suspendreUtilisateur(${user.id_utilisateur})">Suspendre</button>
+                    <button class="btn" onclick="reactiverUtilisateur(${user.id_utilisateur})">Réactiver</button>
+                </div>
+            `;
+
+            zone.appendChild(card);
+        });
+
+    } catch (error) {
+        zone.innerHTML = "<p>Erreur chargement utilisateurs.</p>";
+        console.error(error);
+    }
+}
+
+async function chargerDemandes() {
+    const zone = document.getElementById("admin-demandes");
+
+    try {
+        const response = await fetch("/admin/demandes-certification");
+        const demandes = await response.json();
+
+        if (!response.ok) {
+            zone.innerHTML = `<p>Erreur : ${demandes.error}</p>`;
+            return;
+        }
+
+        if (demandes.length === 0) {
+            zone.innerHTML = "<p>Aucune demande de certification.</p>";
+            return;
+        }
+
+        zone.innerHTML = "";
+
+        demandes.forEach(demande => {
+            const card = document.createElement("div");
+            card.className = "trajet-card";
+
+            card.innerHTML = `
+                <h4>${demande.nom_utilisateur}</h4>
+                <p><strong>Email :</strong> ${demande.email}</p>
+                <p><strong>Permis :</strong> ${demande.numero_permis}</p>
+                <p><strong>Expiration permis :</strong> ${demande.date_expiration_permis}</p>
+                <p><strong>Type identité :</strong> ${demande.type_identite}</p>
+                <p><strong>Numéro identité :</strong> ${demande.numero_identite}</p>
+                <p><strong>Statut :</strong> ${demande.statut_demande}</p>
+                <div class="home-actions">
+                    <button class="btn" onclick="accepterDemande(${demande.id_demande})">Accepter</button>
+                    <button class="btn secondary" onclick="refuserDemande(${demande.id_demande})">Refuser</button>
+                </div>
+            `;
+
+            zone.appendChild(card);
+        });
+
+    } catch (error) {
+        zone.innerHTML = "<p>Erreur chargement demandes.</p>";
+        console.error(error);
+    }
+}
+
+async function chargerTrajetsAdmin() {
+    const zone = document.getElementById("admin-trajets");
+
+    try {
+        const response = await fetch("/admin/trajets");
+        const trajets = await response.json();
+
+        if (!response.ok) {
+            zone.innerHTML = `<p>Erreur : ${trajets.error}</p>`;
+            return;
+        }
+
+        if (trajets.length === 0) {
+            zone.innerHTML = "<p>Aucun trajet trouvé.</p>";
+            return;
+        }
+
+        zone.innerHTML = "";
+
+        trajets.forEach(trajet => {
+            const card = document.createElement("div");
+            card.className = "trajet-card";
+
+            card.innerHTML = `
+                <h4>${trajet.ville_depart} → ${trajet.ville_arrivee}</h4>
+                <p><strong>Conducteur :</strong> ${trajet.conducteur}</p>
+                <p><strong>Date :</strong> ${trajet.date_trajet}</p>
+                <p><strong>Heure :</strong> ${trajet.heure_trajet}</p>
+                <p><strong>Prix :</strong> ${trajet.prix}$</p>
+                <p><strong>Places :</strong> ${trajet.places_disponibles}</p>
+                <p><strong>Statut :</strong> ${trajet.statut}</p>
+            `;
+
+            zone.appendChild(card);
+        });
+
+    } catch (error) {
+        zone.innerHTML = "<p>Erreur chargement trajets.</p>";
+        console.error(error);
+    }
+}
+
+async function suspendreUtilisateur(id_utilisateur) {
+    try {
+        const response = await fetch(`/admin/utilisateur/${id_utilisateur}/suspendre`, {
+            method: "PUT"
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+            alert("✅ " + result.message);
+            chargerUtilisateurs();
+            chargerStatsAdmin();
+        } else {
+            alert("❌ " + (result.error || "Erreur"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erreur serveur");
+    }
+}
+
+async function reactiverUtilisateur(id_utilisateur) {
+    try {
+        const response = await fetch(`/admin/utilisateur/${id_utilisateur}/reactiver`, {
+            method: "PUT"
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+            alert("✅ " + result.message);
+            chargerUtilisateurs();
+            chargerStatsAdmin();
+        } else {
+            alert("❌ " + (result.error || "Erreur"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erreur serveur");
+    }
+}
+
+async function accepterDemande(id_demande) {
+    try {
+        const response = await fetch(`/admin/demande/${id_demande}/accepter`, {
+            method: "PUT"
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+            alert("✅ " + result.message);
+            chargerDemandes();
+            chargerUtilisateurs();
+            chargerStatsAdmin();
+        } else {
+            alert("❌ " + (result.error || "Erreur"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erreur serveur");
+    }
+}
+
+async function refuserDemande(id_demande) {
+    const commentaire = prompt("Entre un commentaire de refus :") || "Certification refusée";
+
+    try {
+        const response = await fetch(`/admin/demande/${id_demande}/refuser`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ commentaire_admin: commentaire })
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+            alert("✅ " + result.message);
+            chargerDemandes();
+            chargerStatsAdmin();
+        } else {
+            alert("❌ " + (result.error || "Erreur"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erreur serveur");
+    }
+}
+
+chargerStatsAdmin();
+chargerUtilisateurs();
+chargerDemandes();
+chargerTrajetsAdmin();
+</script>
+{% endblock %}
