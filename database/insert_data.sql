@@ -270,3 +270,6 @@ VALUES
 (2, 4, 'Oui, il reste une place disponible.'),
 (3, 6, 'Est-ce que vous acceptez les valises ?'),
 (3, 3, 'Oui, une valise cabine sans problème.');
+
+
+ALTER TABLE Utilisateur ADD bio TEXT;

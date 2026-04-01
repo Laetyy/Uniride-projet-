@@ -137,6 +137,7 @@ def login():
                 prenom,
                 email,
                 telephone,
+                bio,
                 photo_profil,
                 role,
                 statut
@@ -163,6 +164,7 @@ def login():
             "prenom": user["prenom"],
             "email": user["email"],
             "telephone": user["telephone"],
+            "bio": user["bio"],
             "photo_profil": user["photo_profil"],
             "role": user["role"],
             "statut": user["statut"]
@@ -200,6 +202,7 @@ def get_profile(id_utilisateur):
                 prenom,
                 email,
                 telephone,
+                bio,
                 photo_profil,
                 role,
                 statut
@@ -234,6 +237,7 @@ def update_profile(id_utilisateur):
     prenom = (data.get("prenom") or "").strip()
     email = (data.get("email") or "").strip().lower()
     telephone = (data.get("telephone") or "").strip()
+    bio = (data.get("bio") or "").strip()
 
     if not email:
         return jsonify({"error": "L'email est obligatoire"}), 400
@@ -256,9 +260,10 @@ def update_profile(id_utilisateur):
             SET nom = %s,
                 prenom = %s,
                 email = %s,
-                telephone = %s
+                telephone = %s,
+                bio = %s
             WHERE id_utilisateur = %s
-        """, (nom, prenom, email, telephone, id_utilisateur))
+        """, (nom, prenom, email, telephone, bio, id_utilisateur))
 
         connection.commit()
 
@@ -270,6 +275,7 @@ def update_profile(id_utilisateur):
                 prenom,
                 email,
                 telephone,
+                bio,
                 photo_profil,
                 role,
                 statut
