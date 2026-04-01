@@ -36,6 +36,153 @@ def email_valide(email):
     return re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email) is not None
 
 
+@auth_bp.route("/register", methods=["POST"])
+def register():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Aucune donnée reçue"}), 400
+
+    nom_utilisateur = (data.get("nom_utilisateur") or "").strip()
+    email = (data.get("email") or "").strip().lower()
+    mot_de_passe = data.get("mot_de_passe") or ""
+    nom = (data.get("nom") or "").strip()
+    prenom = (data.get("prenom") or "").strip()
+    telephone = (data.get("telephone") or "").strip()
+
+    if not nom_utilisateur:
+        return jsonify({"error": "Le nom d'utilisateur est obligatoire"}), 400
+
+    if len(nom_utilisateur) > 10:
+        return jsonify({"error": "Le nom d'utilisateur ne doit pas dépasser 10 caractères"}), 400
+
+    if not email:
+        return jsonify({"error": "L'email est obligatoire"}), 400
+
+    if not email_valide(email):
+        return jsonify({"error": "Adresse email invalide"}), 400
+
+    if not mot_de_passe_valide(mot_de_passe):
+        return jsonify({
+            "error": "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre"
+        }), 400
+
+    if not telephone_canadien_valide(telephone):
+        return jsonify({"error": "Le numéro doit être au format canadien : +1 suivi de 10 chiffres"}), 400
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        mot_de_passe_hash = generate_password_hash(mot_de_passe)
+
+        cursor.execute("""
+            INSERT INTO Utilisateur (
+                nom_utilisateur,
+                mot_de_passe,
+                nom,
+                prenom,
+                email,
+                telephone
+            )
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (nom_utilisateur, mot_de_passe_hash, nom, prenom, email, telephone))
+
+        connection.commit()
+
+        return jsonify({"message": "Compte créé avec succès"}), 201
+
+    except pymysql.err.IntegrityError:
+        return jsonify({"error": "Nom d'utilisateur, email ou téléphone déjà utilisé"}), 409
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@auth_bp.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Aucune donnée reçue"}), 400
+
+    identifiant = (data.get("identifiant") or "").strip()
+    mot_de_passe = data.get("mot_de_passe") or ""
+
+    if not identifiant or not mot_de_passe:
+        return jsonify({"error": "Identifiant et mot de passe obligatoires"}), 400
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT
+                id_utilisateur,
+                nom_utilisateur,
+                mot_de_passe,
+                nom,
+                prenom,
+                email,
+                telephone,
+                photo_profil,
+                role,
+                statut
+            FROM Utilisateur
+            WHERE nom_utilisateur = %s OR email = %s
+            LIMIT 1
+        """, (identifiant, identifiant))
+
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({"error": "Utilisateur introuvable"}), 404
+
+        if user["statut"] != "actif":
+            return jsonify({"error": "Compte non actif"}), 403
+
+        if not check_password_hash(user["mot_de_passe"], mot_de_passe):
+            return jsonify({"error": "Mot de passe incorrect"}), 401
+
+        user_data = {
+            "id_utilisateur": user["id_utilisateur"],
+            "nom_utilisateur": user["nom_utilisateur"],
+            "nom": user["nom"],
+            "prenom": user["prenom"],
+            "email": user["email"],
+            "telephone": user["telephone"],
+            "photo_profil": user["photo_profil"],
+            "role": user["role"],
+            "statut": user["statut"]
+        }
+
+        return jsonify({
+            "message": "Connexion réussie",
+            "user": user_data
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
 @auth_bp.route("/profil/<int:id_utilisateur>", methods=["GET"])
 def get_profile(id_utilisateur):
     connection = None
@@ -53,7 +200,6 @@ def get_profile(id_utilisateur):
                 prenom,
                 email,
                 telephone,
-                bio,
                 photo_profil,
                 role,
                 statut
@@ -88,7 +234,6 @@ def update_profile(id_utilisateur):
     prenom = (data.get("prenom") or "").strip()
     email = (data.get("email") or "").strip().lower()
     telephone = (data.get("telephone") or "").strip()
-    bio = (data.get("bio") or "").strip()
 
     if not email:
         return jsonify({"error": "L'email est obligatoire"}), 400
@@ -111,10 +256,9 @@ def update_profile(id_utilisateur):
             SET nom = %s,
                 prenom = %s,
                 email = %s,
-                telephone = %s,
-                bio = %s
+                telephone = %s
             WHERE id_utilisateur = %s
-        """, (nom, prenom, email, telephone, bio, id_utilisateur))
+        """, (nom, prenom, email, telephone, id_utilisateur))
 
         connection.commit()
 
@@ -126,7 +270,6 @@ def update_profile(id_utilisateur):
                 prenom,
                 email,
                 telephone,
-                bio,
                 photo_profil,
                 role,
                 statut
@@ -208,4 +351,3 @@ def upload_photo():
             cursor.close()
         if connection:
             connection.close()
-
