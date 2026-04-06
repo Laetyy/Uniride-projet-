@@ -143,7 +143,7 @@ p {
     margin-bottom: 18px;
 }
 
-.trajet-card h4,
+.trajet-card h3,
 .card h3,
 .dashboard-card h3,
 .profile-card h3 {
@@ -221,6 +221,17 @@ textarea:focus {
     background: #f8fbff;
 }
 
+.btn.danger {
+    background: #e74c3c;
+    color: white;
+    border: none;
+}
+
+.btn.danger:hover {
+    background: #c0392b;
+    transform: translateY(-1px);
+}
+
 .buttons,
 .home-actions {
     margin-top: 20px;
@@ -250,6 +261,49 @@ textarea:focus {
 
 .trajet-card button {
     margin-top: 14px;
+}
+
+/* ===== BLOC CONDUCTEUR DANS LES TRAJETS ===== */
+.trajet-conducteur-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    background: #f8fbff;
+    border: 1px solid #dbe7f5;
+    padding: 10px 14px;
+    border-radius: 14px;
+    transition: 0.2s ease;
+    margin-bottom: 18px;
+}
+
+.trajet-conducteur-box:hover {
+    background: #eef5ff;
+    transform: translateY(-2px);
+}
+
+.trajet-conducteur-photo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #1f4a8a;
+    flex-shrink: 0;
+}
+
+.trajet-conducteur-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.trajet-conducteur-info strong {
+    font-size: 16px;
+    color: var(--primary);
+}
+
+.trajet-conducteur-info span {
+    font-size: 14px;
+    color: #5c6f87;
 }
 
 /* ===== PROFIL ===== */
@@ -284,6 +338,60 @@ textarea:focus {
     color: var(--muted);
     margin-top: 4px;
     text-align: center;
+}
+
+/* ===== PROFIL CONDUCTEUR ===== */
+.profil-conducteur-page {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.profil-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border);
+}
+
+.profil-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.profil-photo-large {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #1f4a8a;
+}
+
+.profil-info h2 {
+    margin-bottom: 10px;
+    color: #183b6b;
+}
+
+.profil-info p {
+    margin: 8px 0;
+}
+
+.profil-stats,
+.profil-avis {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #e4ebf3;
+}
+
+.avis-card {
+    background: #f8fbff;
+    border: 1px solid #dbe7f5;
+    border-radius: 14px;
+    padding: 14px;
+    margin-top: 12px;
 }
 
 /* ===== DASHBOARD CONDUCTEUR ===== */
@@ -361,58 +469,6 @@ textarea:focus {
     text-align: center;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 900px) {
-    .profile-layout,
-    .dashboard-conducteur {
-        grid-template-columns: 1fr;
-    }
-
-    .hero-box {
-        padding: 32px 24px;
-    }
-
-    .hero-box h2 {
-        font-size: 42px;
-    }
-
-    .hero-box p {
-        font-size: 18px;
-    }
-}
-
-@media (max-width: 768px) {
-    .container {
-        width: 94%;
-    }
-
-    .navbar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 14px;
-    }
-
-    .nav-links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .profile-photo {
-        width: 140px;
-        height: 140px;
-    }
-
-    .btn {
-        width: 100%;
-        margin-right: 0;
-    }
-
-    .buttons,
-    .home-actions {
-        flex-direction: column;
-    }
-}
 /* ===== PROFIL UTILISATEUR STYLE POPARIDE ===== */
 .user-profile-page {
     margin-top: 10px;
@@ -545,40 +601,7 @@ textarea:focus {
     margin-top: 16px;
 }
 
-@media (max-width: 980px) {
-    .user-profile-top {
-        grid-template-columns: 1fr;
-    }
-
-    .user-stats-row,
-    .info-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .bio-showcase-top {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-}
-/* ============================= */
-/* ===== BOUTON ANNULER ===== */
-/* ============================= */
-
-.btn.danger {
-    background: #e74c3c;
-    color: white;
-    border: none;
-}
-
-.btn.danger:hover {
-    background: #c0392b;
-    transform: translateY(-1px);
-}
-
-/* ============================= */
 /* ===== FORMULAIRE TRAJET ===== */
-/* ============================= */
-
 .trip-form-section {
     padding: 30px;
 }
@@ -594,7 +617,6 @@ textarea:focus {
     margin-bottom: 22px;
 }
 
-/* layout formulaire */
 .trip-form {
     display: flex;
     flex-direction: column;
@@ -608,7 +630,6 @@ textarea:focus {
     gap: 18px;
 }
 
-/* champs */
 .trip-form .form-group {
     display: flex;
     flex-direction: column;
@@ -638,7 +659,6 @@ textarea:focus {
     box-shadow: 0 0 0 3px rgba(142, 183, 230, 0.15);
 }
 
-/* box options */
 .options-box {
     background: #f8fbff;
     border: 1px solid var(--border);
@@ -652,7 +672,6 @@ textarea:focus {
     margin-bottom: 10px;
 }
 
-/* checkbox */
 .checkbox-item {
     display: flex;
     align-items: center;
@@ -667,7 +686,6 @@ textarea:focus {
     height: 16px;
 }
 
-/* bouton publier */
 .publish-btn {
     margin-top: 10px;
     height: 56px;
@@ -675,8 +693,80 @@ textarea:focus {
     border-radius: 16px;
 }
 
-/* responsive */
+/* ===== RESPONSIVE ===== */
+@media (max-width: 980px) {
+    .user-profile-top {
+        grid-template-columns: 1fr;
+    }
+
+    .user-stats-row,
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bio-showcase-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 900px) {
+    .profile-layout,
+    .dashboard-conducteur {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-box {
+        padding: 32px 24px;
+    }
+
+    .hero-box h2 {
+        font-size: 42px;
+    }
+
+    .hero-box p {
+        font-size: 18px;
+    }
+
+    .profil-top {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+
 @media (max-width: 768px) {
+    .container {
+        width: 94%;
+    }
+
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .profile-photo {
+        width: 140px;
+        height: 140px;
+    }
+
+    .btn {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .buttons,
+    .home-actions {
+        flex-direction: column;
+    }
+
     .form-grid,
     .form-row {
         grid-template-columns: 1fr;

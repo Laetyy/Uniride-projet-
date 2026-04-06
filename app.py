@@ -5,6 +5,7 @@ from routes.trajets import trajets_bp
 from routes.reservation import reservation_bp
 from routes.conducteur import conducteur_bp
 from routes.admin import admin_bp
+from routes.profil import profil_bp
 
 app = flask.Flask(__name__)
 app.secret_key = 'uniride_secret_key_2026'
@@ -21,6 +22,7 @@ app.register_blueprint(trajets_bp)
 app.register_blueprint(reservation_bp)
 app.register_blueprint(conducteur_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(profil_bp)
 
 @app.route("/")
 def home():
@@ -57,6 +59,11 @@ def profile_page():
     return flask.render_template("profil.html")
 
 
+@app.route("/profil-conducteur-page")
+def profil_conducteur_page():
+    return flask.render_template("profil_conducteur.html")
+
+
 @app.route("/conducteur-page")
 def conducteur_page():
     return flask.render_template("conducteur.html")
@@ -66,9 +73,11 @@ def conducteur_page():
 def mes_reservations_page():
     return flask.render_template("mes_reservations.html")
 
+
 @app.route("/admin-page")
 def admin_page():
     return flask.render_template("admin.html")
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

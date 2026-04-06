@@ -15,26 +15,27 @@ def get_trajets():
         cursor = connection.cursor()
 
         cursor.execute("""
-            SELECT
-                t.id_trajet,
-                u.nom_utilisateur AS conducteur,
-                vd.nom_ville AS ville_depart,
-                va.nom_ville AS ville_arrivee,
-                t.vehicule,
-                t.date_trajet,
-                t.heure_trajet,
-                t.prix,
-                t.places_disponibles,
-                t.ambiance,
-                t.musique,
-                t.telephone_autorise,
-                t.statut
-            FROM Trajet t
-            JOIN Utilisateur u ON t.id_conducteur = u.id_utilisateur
-            JOIN Ville vd ON t.id_ville_depart = vd.id_ville
-            JOIN Ville va ON t.id_ville_arrivee = va.id_ville
-            ORDER BY t.date_trajet, t.heure_trajet
-        """)
+                       SELECT t.id_trajet,
+                              t.id_conducteur,
+                              u.nom_utilisateur AS conducteur,
+                              u.photo_profil,
+                              vd.nom_ville      AS ville_depart,
+                              va.nom_ville      AS ville_arrivee,
+                              t.vehicule,
+                              t.date_trajet,
+                              t.heure_trajet,
+                              t.prix,
+                              t.places_disponibles,
+                              t.ambiance,
+                              t.musique,
+                              t.telephone_autorise,
+                              t.statut
+                       FROM Trajet t
+                                JOIN Utilisateur u ON t.id_conducteur = u.id_utilisateur
+                                JOIN Ville vd ON t.id_ville_depart = vd.id_ville
+                                JOIN Ville va ON t.id_ville_arrivee = va.id_ville
+                       ORDER BY t.date_trajet, t.heure_trajet
+                       """)
 
         trajets = cursor.fetchall()
 

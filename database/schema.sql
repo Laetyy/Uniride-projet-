@@ -137,9 +137,10 @@ CREATE TABLE Reservation (
     FOREIGN KEY (id_passager) REFERENCES Utilisateur(id_utilisateur),
     CHECK (nb_places > 0)
 );
-
+DROP TABLE IF EXISTS Paiement;
 CREATE TABLE Paiement (
     id_paiement INT AUTO_INCREMENT PRIMARY KEY,
+
     id_reservation INT UNIQUE NOT NULL,
     montant_argent DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     montant_points INT NOT NULL DEFAULT 0,
@@ -150,7 +151,6 @@ CREATE TABLE Paiement (
     CHECK (montant_argent >= 0),
     CHECK (montant_points >= 0)
 );
-
 CREATE TABLE HistoriqueWallet (
     id_operation INT AUTO_INCREMENT PRIMARY KEY,
     id_wallet INT NOT NULL,

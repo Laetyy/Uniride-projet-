@@ -23,19 +23,27 @@ async function loadTrajets() {
 
         trajets.forEach(trajet => {
             const div = document.createElement("div");
-            div.className = "card";
+            div.className = "trajet-card";
+
+            const photoProfil = trajet.photo_profil && trajet.photo_profil.trim() !== ""
+                ? `/${trajet.photo_profil}`
+                : "/static/images/default-profile.png";
 
             div.innerHTML = `
+                <div class="trajet-conducteur-box" onclick="voirProfilConducteur(${trajet.id_conducteur})">
+                    <img src="${photoProfil}" alt="Photo du conducteur" class="trajet-conducteur-photo">
+                    <div class="trajet-conducteur-info">
+                        <strong>${trajet.conducteur || "Non indiqué"}</strong>
+                        <span>Voir le profil</span>
+                    </div>
+                </div>
+
                 <h3>${trajet.ville_depart} → ${trajet.ville_arrivee}</h3>
-                <p><strong>Conducteur :</strong> ${trajet.conducteur || "Non indiqué"}</p>
                 <p><strong>Véhicule :</strong> ${trajet.vehicule || "Non indiqué"}</p>
-                <p><strong>Date :</strong> ${trajet.date_trajet}</p>
-                <p><strong>Heure :</strong> ${trajet.heure_trajet}</p>
+                <p><strong>Date :</strong> ${trajet.date_trajet || "Non indiquée"}</p>
+                <p><strong>Heure :</strong> ${trajet.heure_trajet || "Non indiquée"}</p>
                 <p><strong>Prix :</strong> ${trajet.prix} $</p>
                 <p><strong>Places disponibles :</strong> ${trajet.places_disponibles}</p>
-                <p><strong>Ambiance :</strong> ${trajet.ambiance || "Non indiquée"}</p>
-                <p><strong>Musique :</strong> ${trajet.musique ? "Oui" : "Non"}</p>
-                <p><strong>Appels autorisés :</strong> ${trajet.telephone_autorise ? "Oui" : "Non"}</p>
 
                 <button class="btn" onclick="reserver(${trajet.id_trajet})">
                     Réserver
@@ -49,6 +57,10 @@ async function loadTrajets() {
         container.innerHTML = `<p>Erreur de chargement : ${error.message}</p>`;
         console.error(error);
     }
+}
+
+function voirProfilConducteur(idConducteur) {
+    window.location.href = `/profil-conducteur-page?id=${idConducteur}`;
 }
 
 async function reserver(id_trajet) {
