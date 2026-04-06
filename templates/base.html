@@ -9,20 +9,82 @@
 <body>
     <nav class="navbar">
         <h1>🚗 UNIRIDE</h1>
+
         <div class="nav-links">
             <a href="/home">Accueil</a>
-            <a href="/trajets-page">Trouver un trajet</a>
-            <a href="/conducteur-page">Publier un trajet</a>
-            <a href="/mes-reservations-page">Mes réservations</a>
-            <a href="/profil-page">Profil</a>
-            <a href="/admin">Admin</a>
-            <a href="/login-page">Connexion</a>
-            <a href="/register-page">Inscription</a>
+
+            <a href="/trajets-page" class="nav-connected">Trouver un trajet</a>
+            <a href="/conducteur-page" class="nav-connected">Publier un trajet</a>
+            <a href="/mes-reservations-page" class="nav-connected">Mes réservations</a>
+            <a href="/profil-page" class="nav-connected">Profil</a>
+            <a href="/admin-page" class="nav-connected nav-admin">Admin</a>
+
+            <a href="/login-page" class="nav-disconnected">Connexion</a>
+            <a href="/register-page" class="nav-disconnected">Inscription</a>
+
+            <a href="#" id="logout-link" class="nav-connected">Déconnexion</a>
         </div>
     </nav>
 
     <div class="container">
         {% block content %}{% endblock %}
     </div>
+
+   <script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        function updateNavbar() {
+            const user = JSON.parse(localStorage.getItem("user"));
+
+            const connectedLinks = document.querySelectorAll(".nav-connected");
+            const disconnectedLinks = document.querySelectorAll(".nav-disconnected");
+            const adminLinks = document.querySelectorAll(".nav-admin");
+
+            if (user) {
+                connectedLinks.forEach(link => {
+                    link.style.display = "inline-block";
+                });
+
+                disconnectedLinks.forEach(link => {
+                    link.style.display = "none";
+                });
+
+                if (user.role === "admin") {
+                    adminLinks.forEach(link => {
+                        link.style.display = "inline-block";
+                    });
+                } else {
+                    adminLinks.forEach(link => {
+                        link.style.display = "none";
+                    });
+                }
+            } else {
+                connectedLinks.forEach(link => {
+                    link.style.display = "none";
+                });
+
+                disconnectedLinks.forEach(link => {
+                    link.style.display = "inline-block";
+                });
+
+                adminLinks.forEach(link => {
+                    link.style.display = "none";
+                });
+            }
+        }
+
+        const logoutLink = document.getElementById("logout-link");
+
+        if (logoutLink) {
+            logoutLink.addEventListener("click", function (e) {
+                e.preventDefault();
+                localStorage.removeItem("user");
+                window.location.href = "/home";
+            });
+        }
+
+        updateNavbar();
+    });
+</script>
 </body>
 </html>

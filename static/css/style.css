@@ -772,3 +772,8 @@ textarea:focus {
         grid-template-columns: 1fr;
     }
 }
+
+.nav-connected,
+.nav-admin {
+    display: none;
+}
