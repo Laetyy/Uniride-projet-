@@ -11,12 +11,37 @@
 
 <div class="card" style="margin-top: -10px; margin-bottom: 26px;">
     <h3>Recherche de trajet</h3>
+
     <div class="two-col">
-        <input type="text" placeholder="Départ">
-        <input type="text" placeholder="Destination">
+        <input type="text" id="departInput" placeholder="Départ" list="liste-villes" autocomplete="off">
+        <input type="text" id="destinationInput" placeholder="Destination" list="liste-villes" autocomplete="off">
     </div>
+
+    <datalist id="liste-villes">
+        <option value="Montréal">
+        <option value="Quebec">
+        <option value="Laval">
+        <option value="Gatineau">
+        <option value="Sherbrooke">
+        <option value="Trois-Rivières">
+        <option value="Ottawa">
+        <option value="Toronto">
+        <option value="Mississauga">
+        <option value="Brampton">
+        <option value="Vancouver">
+        <option value="Surrey">
+        <option value="Burnaby">
+        <option value="Calgary">
+        <option value="Edmonton">
+        <option value="Winnipeg">
+        <option value="Halifax">
+        <option value="Saskatoon">
+        <option value="Regina">
+        <option value="St. John's">
+    </datalist>
+
     <div class="home-actions">
-        <button class="btn">Rechercher</button>
+        <button class="btn" id="searchTrajetsBtn">Rechercher</button>
     </div>
 </div>
 

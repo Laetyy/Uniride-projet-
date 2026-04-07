@@ -106,8 +106,10 @@
             </div>
 
             <div class="card review-card">
-                <h3>Avis</h3>
-                <p>Les avis et commentaires des trajets pourront apparaître ici plus tard.</p>
+                <h3>Avis reçus</h3>
+                <div id="avis-conducteur-zone">
+                    <p>Les avis apparaîtront ici si vous êtes conducteur.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -121,6 +123,7 @@ if (!user) {
 } else {
     chargerProfil();
     chargerStatsProfil();
+    chargerAvisConducteurSiBesoin();
 }
 
 async function chargerProfil() {
@@ -182,6 +185,58 @@ async function chargerStatsProfil() {
         }
     } catch (error) {
         console.error(error);
+    }
+}
+
+async function chargerAvisConducteurSiBesoin() {
+    const zoneAvis = document.getElementById("avis-conducteur-zone");
+
+    if (!zoneAvis) return;
+
+    if (user.role !== "conducteur") {
+        zoneAvis.innerHTML = "<p>Les avis seront visibles ici quand vous serez conducteur.</p>";
+        return;
+    }
+
+    try {
+        const response = await fetch(`/profil-conducteur/${user.id_utilisateur}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            zoneAvis.innerHTML = `<p>${data.error || "Erreur lors du chargement des avis."}</p>`;
+            return;
+        }
+
+        const avis = data.avis || [];
+        const moyenne = data.stats?.moyenne_avis || 0;
+        const nbAvis = data.stats?.nb_avis || 0;
+
+        if (avis.length === 0) {
+            zoneAvis.innerHTML = `
+                <p>Aucun avis reçu pour le moment.</p>
+            `;
+            return;
+        }
+
+        let html = `
+            <p><strong>Note moyenne :</strong> ⭐ ${moyenne}/5</p>
+            <p><strong>Nombre d'avis :</strong> ${nbAvis}</p>
+        `;
+
+        avis.forEach(a => {
+            html += `
+                <div class="avis-card">
+                    <p><strong>${a.auteur}</strong> — ⭐ ${a.note}/5</p>
+                    <p>${a.commentaire || "Aucun commentaire"}</p>
+                </div>
+            `;
+        });
+
+        zoneAvis.innerHTML = html;
+
+    } catch (error) {
+        console.error(error);
+        zoneAvis.innerHTML = "<p>Erreur serveur lors du chargement des avis.</p>";
     }
 }
 
@@ -260,6 +315,7 @@ document.getElementById("save-profile-btn").addEventListener("click", async func
             localStorage.setItem("user", JSON.stringify(user));
             alert("✅ Profil mis à jour");
             chargerProfil();
+            chargerAvisConducteurSiBesoin();
         } else {
             alert("❌ " + (result.error || "Erreur"));
         }

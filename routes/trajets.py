@@ -15,27 +15,30 @@ def get_trajets():
         cursor = connection.cursor()
 
         cursor.execute("""
-                       SELECT t.id_trajet,
-                              t.id_conducteur,
-                              u.nom_utilisateur AS conducteur,
-                              u.photo_profil,
-                              vd.nom_ville      AS ville_depart,
-                              va.nom_ville      AS ville_arrivee,
-                              t.vehicule,
-                              t.date_trajet,
-                              t.heure_trajet,
-                              t.prix,
-                              t.places_disponibles,
-                              t.ambiance,
-                              t.musique,
-                              t.telephone_autorise,
-                              t.statut
-                       FROM Trajet t
-                                JOIN Utilisateur u ON t.id_conducteur = u.id_utilisateur
-                                JOIN Ville vd ON t.id_ville_depart = vd.id_ville
-                                JOIN Ville va ON t.id_ville_arrivee = va.id_ville
-                       ORDER BY t.date_trajet, t.heure_trajet
-                       """)
+            SELECT
+                t.id_trajet,
+                t.id_conducteur,
+                u.nom_utilisateur AS conducteur,
+                u.photo_profil,
+                vd.nom_ville AS ville_depart,
+                va.nom_ville AS ville_arrivee,
+                v.modele AS vehicule,
+                t.date_trajet,
+                t.heure_trajet,
+                t.prix,
+                t.places_disponibles,
+                t.ambiance,
+                t.musique,
+                t.telephone_autorise,
+                t.statut
+            FROM Trajet t
+            JOIN Utilisateur u ON t.id_conducteur = u.id_utilisateur
+            JOIN Ville vd ON t.id_ville_depart = vd.id_ville
+            JOIN Ville va ON t.id_ville_arrivee = va.id_ville
+            JOIN Vehicule v ON t.id_vehicule = v.id_vehicule
+            WHERE t.statut = 'actif'
+            ORDER BY t.date_trajet, t.heure_trajet
+        """)
 
         trajets = cursor.fetchall()
 
@@ -46,6 +49,34 @@ def get_trajets():
                 trajet["heure_trajet"] = str(trajet["heure_trajet"])
 
         return jsonify(trajets), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@trajets_bp.route("/villes", methods=["GET"])
+def get_villes():
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT id_ville, nom_ville, province
+            FROM Ville
+            ORDER BY nom_ville ASC
+        """)
+        villes = cursor.fetchall()
+
+        return jsonify(villes), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -68,7 +99,7 @@ def create_trajet():
         "id_conducteur",
         "id_ville_depart",
         "id_ville_arrivee",
-        "vehicule",
+        "id_vehicule",
         "date_trajet",
         "heure_trajet",
         "prix",
@@ -96,7 +127,7 @@ def create_trajet():
                 id_conducteur,
                 id_ville_depart,
                 id_ville_arrivee,
-                vehicule,
+                id_vehicule,
                 date_trajet,
                 heure_trajet,
                 prix,
@@ -111,7 +142,7 @@ def create_trajet():
             data["id_conducteur"],
             data["id_ville_depart"],
             data["id_ville_arrivee"],
-            data["vehicule"].strip(),
+            data["id_vehicule"],
             data["date_trajet"],
             data["heure_trajet"],
             data["prix"],

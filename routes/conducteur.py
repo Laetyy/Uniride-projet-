@@ -238,6 +238,7 @@ def get_trajets_conducteur(id_utilisateur):
                 t.id_trajet,
                 vd.nom_ville AS ville_depart,
                 va.nom_ville AS ville_arrivee,
+                v.modele AS vehicule,
                 t.date_trajet,
                 t.heure_trajet,
                 t.prix,
@@ -247,6 +248,7 @@ def get_trajets_conducteur(id_utilisateur):
             FROM Trajet t
             JOIN Ville vd ON t.id_ville_depart = vd.id_ville
             JOIN Ville va ON t.id_ville_arrivee = va.id_ville
+            JOIN Vehicule v ON t.id_vehicule = v.id_vehicule
             WHERE t.id_conducteur = %s
             ORDER BY t.date_trajet DESC, t.heure_trajet DESC
         """, (id_utilisateur,))
@@ -284,8 +286,10 @@ def reservations_conducteur(id_conducteur):
             SELECT
                 r.id_reservation,
                 u.nom_utilisateur AS passager,
+                t.id_trajet,
                 t.date_trajet,
                 t.heure_trajet,
+                t.statut AS statut_trajet,
                 vd.nom_ville AS depart,
                 va.nom_ville AS arrivee,
                 r.nb_places,
@@ -310,6 +314,144 @@ def reservations_conducteur(id_conducteur):
         return jsonify(reservations), 200
 
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@conducteur_bp.route("/conducteur/vehicule/<int:id_utilisateur>", methods=["GET"])
+def get_vehicule_conducteur(id_utilisateur):
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT
+                id_vehicule,
+                modele,
+                type_vehicule,
+                couleur,
+                annee,
+                plaque_immatriculation
+            FROM Vehicule
+            WHERE id_utilisateur = %s
+            ORDER BY id_vehicule DESC
+            LIMIT 1
+        """, (id_utilisateur,))
+
+        vehicule = cursor.fetchone()
+
+        if not vehicule:
+            return jsonify({"error": "Aucun véhicule trouvé pour ce conducteur"}), 404
+
+        return jsonify(vehicule), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@conducteur_bp.route("/conducteur/trajet/<int:id_trajet>/terminer", methods=["PUT"])
+def terminer_trajet(id_trajet):
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        connection.begin()
+
+        cursor.execute("""
+            SELECT id_trajet, id_conducteur, prix, statut
+            FROM Trajet
+            WHERE id_trajet = %s
+        """, (id_trajet,))
+        trajet = cursor.fetchone()
+
+        if not trajet:
+            connection.rollback()
+            return jsonify({"error": "Trajet introuvable"}), 404
+
+        if trajet["statut"] == "termine":
+            connection.rollback()
+            return jsonify({"error": "Ce trajet est déjà terminé"}), 400
+
+        cursor.execute("""
+            SELECT COALESCE(SUM(nb_places), 0) AS total_places_reservees
+            FROM Reservation
+            WHERE id_trajet = %s AND statut = 'confirmee'
+        """, (id_trajet,))
+        total_places_row = cursor.fetchone()
+        total_places_reservees = int(total_places_row["total_places_reservees"] or 0)
+
+        montant_total = float(trajet["prix"]) * total_places_reservees
+
+        cursor.execute("""
+            UPDATE Trajet
+            SET statut = 'termine'
+            WHERE id_trajet = %s
+        """, (id_trajet,))
+
+        cursor.execute("""
+            SELECT id_wallet
+            FROM Wallet
+            WHERE id_utilisateur = %s
+        """, (trajet["id_conducteur"],))
+        wallet = cursor.fetchone()
+
+        if not wallet:
+            cursor.execute("""
+                INSERT INTO Wallet (id_utilisateur, solde_argent, solde_points)
+                VALUES (%s, 0.00, 0)
+            """, (trajet["id_conducteur"],))
+            id_wallet = cursor.lastrowid
+        else:
+            id_wallet = wallet["id_wallet"]
+
+        if montant_total > 0:
+            cursor.execute("""
+                UPDATE Wallet
+                SET solde_argent = solde_argent + %s
+                WHERE id_wallet = %s
+            """, (montant_total, id_wallet))
+
+            cursor.execute("""
+                INSERT INTO HistoriqueWallet (
+                    id_wallet,
+                    type_operation,
+                    montant_argent,
+                    montant_points,
+                    description
+                )
+                VALUES (%s, 'reception', %s, 0, %s)
+            """, (
+                id_wallet,
+                montant_total,
+                f"Paiement reçu pour le trajet #{id_trajet}"
+            ))
+
+        connection.commit()
+
+        return jsonify({
+            "message": "Trajet marqué comme terminé avec succès",
+            "montant_recu": montant_total
+        }), 200
+
+    except Exception as e:
+        if connection:
+            connection.rollback()
         return jsonify({"error": str(e)}), 500
 
     finally:

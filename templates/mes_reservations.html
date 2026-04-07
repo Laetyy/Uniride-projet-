@@ -2,20 +2,31 @@
 
 {% block content %}
 <h2>Mes réservations</h2>
-<div id="reservations-container"></div>
+
+<div class="dashboard-card">
+    <h3>Réservations actives</h3>
+    <div id="reservations-actives"></div>
+</div>
+
+<div class="dashboard-card">
+    <h3>Historique de trajets</h3>
+    <div id="historique-reservations"></div>
+</div>
 
 <script>
 const user = JSON.parse(localStorage.getItem("user"));
-const container = document.getElementById("reservations-container");
+const zoneActives = document.getElementById("reservations-actives");
+const zoneHistorique = document.getElementById("historique-reservations");
 
 if (!user) {
-    container.innerHTML = `
+    zoneActives.innerHTML = `
         <div class="dashboard-card">
             <h3>Accès refusé</h3>
             <p>Veuillez vous connecter pour voir vos réservations.</p>
             <a class="btn" href="/login-page">Se connecter</a>
         </div>
     `;
+    zoneHistorique.innerHTML = "";
 } else {
     chargerReservations();
 }
@@ -26,18 +37,26 @@ async function chargerReservations() {
         const reservations = await response.json();
 
         if (!response.ok) {
-            container.innerHTML = `<p>Erreur : ${reservations.error}</p>`;
+            zoneActives.innerHTML = `<p>Erreur : ${reservations.error}</p>`;
+            zoneHistorique.innerHTML = `<p>Erreur : ${reservations.error}</p>`;
             return;
         }
 
-        if (reservations.length === 0) {
-            container.innerHTML = "<p>Aucune réservation pour le moment.</p>";
-            return;
+        const actives = reservations.filter(r => r.statut_trajet !== "termine");
+        const historiques = reservations.filter(r => r.statut_trajet === "termine");
+
+        zoneActives.innerHTML = "";
+        zoneHistorique.innerHTML = "";
+
+        if (actives.length === 0) {
+            zoneActives.innerHTML = "<p>Aucune réservation active pour le moment.</p>";
         }
 
-        container.innerHTML = "";
+        if (historiques.length === 0) {
+            zoneHistorique.innerHTML = "<p>Aucun trajet terminé dans l'historique.</p>";
+        }
 
-        reservations.forEach(reservation => {
+        actives.forEach(reservation => {
             const card = document.createElement("div");
             card.className = "trajet-card";
 
@@ -48,16 +67,58 @@ async function chargerReservations() {
                 <p><strong>Heure :</strong> ${reservation.heure_trajet}</p>
                 <p><strong>Prix :</strong> ${reservation.prix}$</p>
                 <p><strong>Places réservées :</strong> ${reservation.nb_places}</p>
-                <p><strong>Statut :</strong> ${reservation.statut}</p>
+                <p><strong>Statut réservation :</strong> ${reservation.statut}</p>
+                <p><strong>Statut trajet :</strong> ${reservation.statut_trajet}</p>
                 <p><strong>Date de réservation :</strong> ${reservation.date_reservation}</p>
-                <button class="btn danger" onclick="annulerReservation(${reservation.id_reservation})">❌ Annuler</button>
+                <div class="home-actions">
+                    <button class="btn danger" onclick="annulerReservation(${reservation.id_reservation})">❌ Annuler</button>
+                </div>
             `;
 
-            container.appendChild(card);
+            zoneActives.appendChild(card);
         });
+
+        historiques.forEach(reservation => {
+            const card = document.createElement("div");
+            card.className = "trajet-card";
+
+            let actionAvis = "";
+
+            if (!reservation.deja_note) {
+                actionAvis = `
+                    <div class="home-actions">
+                        <button class="btn" onclick="laisserAvis(${reservation.id_trajet})">
+                            Laisser un avis
+                        </button>
+                    </div>
+                    <p class="small-text">
+                        Votre trajet est terminé. Vous pouvez maintenant évaluer votre expérience.
+                    </p>
+                `;
+            } else {
+                actionAvis = `<p class="small-text">Avis déjà envoyé ✅</p>`;
+            }
+
+            card.innerHTML = `
+                <h4>${reservation.ville_depart} → ${reservation.ville_arrivee}</h4>
+                <p><strong>Conducteur :</strong> ${reservation.conducteur}</p>
+                <p><strong>Date du trajet :</strong> ${reservation.date_trajet}</p>
+                <p><strong>Heure :</strong> ${reservation.heure_trajet}</p>
+                <p><strong>Prix :</strong> ${reservation.prix}$</p>
+                <p><strong>Places réservées :</strong> ${reservation.nb_places}</p>
+                <p><strong>Statut réservation :</strong> ${reservation.statut}</p>
+                <p><strong>Statut trajet :</strong> ${reservation.statut_trajet}</p>
+                <p><strong>Date de réservation :</strong> ${reservation.date_reservation}</p>
+                ${actionAvis}
+            `;
+
+            zoneHistorique.appendChild(card);
+        });
+
     } catch (error) {
         console.error(error);
-        container.innerHTML = "<p>Erreur serveur lors du chargement des réservations.</p>";
+        zoneActives.innerHTML = "<p>Erreur serveur lors du chargement des réservations.</p>";
+        zoneHistorique.innerHTML = "<p>Erreur serveur lors du chargement de l'historique.</p>";
     }
 }
 
@@ -75,6 +136,46 @@ async function annulerReservation(id_reservation) {
 
         if (response.ok) {
             alert("✅ Réservation annulée");
+            chargerReservations();
+        } else {
+            alert("❌ " + (result.error || "Erreur"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erreur serveur");
+    }
+}
+
+async function laisserAvis(id_trajet) {
+    const noteInput = prompt("Donne une note de 1 à 5 étoiles :");
+
+    if (noteInput === null) return;
+
+    const note = parseInt(noteInput, 10);
+
+    if (isNaN(note) || note < 1 || note > 5) {
+        alert("❌ La note doit être un nombre entre 1 et 5.");
+        return;
+    }
+
+    const commentaire = prompt("Ajoute un commentaire (optionnel) :") || "";
+
+    try {
+        const response = await fetch("/evaluation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id_trajet: id_trajet,
+                id_passager: user.id_utilisateur,
+                note: note,
+                commentaire: commentaire
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert("✅ Merci ! Votre avis a été enregistré.");
             chargerReservations();
         } else {
             alert("❌ " + (result.error || "Erreur"));

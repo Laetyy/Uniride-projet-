@@ -13,7 +13,6 @@ def get_profil_conducteur(id_utilisateur):
         connection = get_connection()
         cursor = connection.cursor()
 
-        # Infos principales du conducteur
         cursor.execute("""
             SELECT
                 u.id_utilisateur,
@@ -31,7 +30,6 @@ def get_profil_conducteur(id_utilisateur):
         if not conducteur:
             return jsonify({"error": "Conducteur introuvable"}), 404
 
-        # Nombre de trajets publiés
         cursor.execute("""
             SELECT COUNT(*) AS nb_trajets
             FROM Trajet
@@ -40,7 +38,6 @@ def get_profil_conducteur(id_utilisateur):
         nb_trajets_result = cursor.fetchone()
         nb_trajets = nb_trajets_result["nb_trajets"] if nb_trajets_result else 0
 
-        # Total des places publiées
         cursor.execute("""
             SELECT COALESCE(SUM(places_disponibles), 0) AS total_places
             FROM Trajet
@@ -49,28 +46,43 @@ def get_profil_conducteur(id_utilisateur):
         total_places_result = cursor.fetchone()
         total_places = total_places_result["total_places"] if total_places_result else 0
 
-        # Dernier véhicule utilisé
         cursor.execute("""
-            SELECT vehicule
-            FROM Trajet
-            WHERE id_conducteur = %s
-            ORDER BY date_trajet DESC, heure_trajet DESC
+            SELECT
+                v.modele,
+                v.type_vehicule,
+                v.couleur,
+                v.annee,
+                v.plaque_immatriculation
+            FROM Vehicule v
+            WHERE v.id_utilisateur = %s
+            ORDER BY v.id_vehicule DESC
             LIMIT 1
         """, (id_utilisateur,))
         vehicule_row = cursor.fetchone()
-        vehicule = vehicule_row["vehicule"] if vehicule_row and vehicule_row.get("vehicule") else "Non renseigné"
 
-        # Infos du dernier trajet publié
+        if vehicule_row:
+            vehicule = vehicule_row["modele"] or "Non renseigné"
+            if vehicule_row.get("annee"):
+                vehicule += f" {vehicule_row['annee']}"
+            if vehicule_row.get("couleur"):
+                vehicule += f" - {vehicule_row['couleur']}"
+        else:
+            vehicule = "Non renseigné"
+
         cursor.execute("""
             SELECT
-                ambiance,
-                musique,
-                telephone_autorise,
-                date_trajet,
-                heure_trajet
-            FROM Trajet
-            WHERE id_conducteur = %s
-            ORDER BY date_trajet DESC, heure_trajet DESC
+                t.ambiance,
+                t.musique,
+                t.telephone_autorise,
+                t.date_trajet,
+                t.heure_trajet,
+                vd.nom_ville AS ville_depart,
+                va.nom_ville AS ville_arrivee
+            FROM Trajet t
+            JOIN Ville vd ON t.id_ville_depart = vd.id_ville
+            JOIN Ville va ON t.id_ville_arrivee = va.id_ville
+            WHERE t.id_conducteur = %s
+            ORDER BY t.date_trajet DESC, t.heure_trajet DESC
             LIMIT 1
         """, (id_utilisateur,))
         trajet_info = cursor.fetchone()
@@ -81,7 +93,6 @@ def get_profil_conducteur(id_utilisateur):
             if trajet_info.get("heure_trajet"):
                 trajet_info["heure_trajet"] = str(trajet_info["heure_trajet"])
 
-        # Avis clients = table Evaluation
         cursor.execute("""
             SELECT
                 e.note,

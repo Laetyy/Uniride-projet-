@@ -175,6 +175,141 @@ async function renderPendingDriver() {
     }
 }
 
+async function chargerVehiculeConducteur() {
+    try {
+        const response = await fetch(`/conducteur/vehicule/${user.id_utilisateur}`);
+        const vehicule = await response.json();
+
+        const vehiculeInput = document.getElementById("vehicule");
+        const idVehiculeInput = document.getElementById("id_vehicule");
+
+        if (!vehiculeInput || !idVehiculeInput) return;
+
+        if (!response.ok) {
+            vehiculeInput.value = "Aucun véhicule enregistré";
+            idVehiculeInput.value = "";
+            return;
+        }
+
+        let labelVehicule = vehicule.modele || "Véhicule enregistré";
+
+        if (vehicule.annee) {
+            labelVehicule += ` ${vehicule.annee}`;
+        }
+
+        if (vehicule.couleur) {
+            labelVehicule += ` - ${vehicule.couleur}`;
+        }
+
+        vehiculeInput.value = labelVehicule;
+        idVehiculeInput.value = vehicule.id_vehicule;
+
+    } catch (error) {
+        console.error(error);
+        const vehiculeInput = document.getElementById("vehicule");
+        if (vehiculeInput) {
+            vehiculeInput.value = "Erreur de chargement du véhicule";
+        }
+    }
+}
+
+async function chargerVillesDansSelects() {
+    try {
+        const response = await fetch("/villes");
+        const villes = await response.json();
+
+        const departSelect = document.getElementById("id_ville_depart");
+        const arriveeSelect = document.getElementById("id_ville_arrivee");
+
+        if (!departSelect || !arriveeSelect) return;
+
+        if (!response.ok) {
+            departSelect.innerHTML = `<option value="">Erreur chargement villes</option>`;
+            arriveeSelect.innerHTML = `<option value="">Erreur chargement villes</option>`;
+            return;
+        }
+
+        const villesAutorisees = [
+            "Montreal",
+            "Quebec",
+            "Laval",
+            "Gatineau",
+            "Sherbrooke",
+            "Trois-Rivieres",
+            "Ottawa",
+            "Toronto",
+            "Mississauga",
+            "Brampton",
+            "Vancouver",
+            "Surrey",
+            "Burnaby",
+            "Calgary",
+            "Edmonton",
+            "Winnipeg",
+            "Halifax",
+            "Saskatoon",
+            "Regina",
+            "St. John's"
+        ];
+
+        const villesFiltrees = villes.filter(ville =>
+            villesAutorisees.includes(ville.nom_ville)
+        );
+
+        departSelect.innerHTML = `<option value="">Choisir une ville</option>`;
+        arriveeSelect.innerHTML = `<option value="">Choisir une ville</option>`;
+
+        villesFiltrees.forEach(ville => {
+            const nomsAffiches = {
+                "Montreal": "Montréal",
+                "Quebec": "Quebec",
+                "Trois-Rivieres": "Trois-Rivières"
+            };
+
+            const label = nomsAffiches[ville.nom_ville] || ville.nom_ville;
+
+            const optionDepart = document.createElement("option");
+            optionDepart.value = ville.id_ville;
+            optionDepart.textContent = label;
+
+            const optionArrivee = document.createElement("option");
+            optionArrivee.value = ville.id_ville;
+            optionArrivee.textContent = label;
+
+            departSelect.appendChild(optionDepart);
+            arriveeSelect.appendChild(optionArrivee);
+        });
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function terminerTrajet(id_trajet) {
+    const confirmation = confirm("Confirmer que ce trajet est bien terminé ?");
+
+    if (!confirmation) return;
+
+    try {
+        const response = await fetch(`/conducteur/trajet/${id_trajet}/terminer`, {
+            method: "PUT"
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert(`✅ ${result.message}\nMontant reçu : ${result.montant_recu} $`);
+            chargerMesTrajets();
+            chargerReservationsConducteur();
+        } else {
+            alert("❌ " + (result.error || "Erreur"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erreur serveur");
+    }
+}
+
 function renderDriverDashboard() {
     container.innerHTML = `
         <div class="dashboard-conducteur">
@@ -187,37 +322,22 @@ function renderDriverDashboard() {
                         <div class="form-group">
                             <label for="id_ville_depart">Ville de départ</label>
                             <select id="id_ville_depart" required>
-                                <option value="">Choisir une ville</option>
-                                <option value="1">Montréal</option>
-                                <option value="2">Québec</option>
-                                <option value="3">Laval</option>
-                                <option value="4">Gatineau</option>
-                                <option value="5">Sherbrooke</option>
-                                <option value="6">Trois-Rivières</option>
-                                <option value="7">Ottawa</option>
-                                <option value="8">Toronto</option>
+                                <option value="">Chargement des villes...</option>
                             </select>
                         </div>
 
                         <div class="form-group">
                             <label for="id_ville_arrivee">Ville d'arrivée</label>
                             <select id="id_ville_arrivee" required>
-                                <option value="">Choisir une ville</option>
-                                <option value="1">Montréal</option>
-                                <option value="2">Québec</option>
-                                <option value="3">Laval</option>
-                                <option value="4">Gatineau</option>
-                                <option value="5">Sherbrooke</option>
-                                <option value="6">Trois-Rivières</option>
-                                <option value="7">Ottawa</option>
-                                <option value="8">Toronto</option>
+                                <option value="">Chargement des villes...</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="vehicule">Véhicule</label>
-                        <input type="text" id="vehicule" placeholder="Ex : Toyota Corolla 2020" required>
+                        <label for="vehicule">Véhicule enregistré</label>
+                        <input type="text" id="vehicule" placeholder="Chargement du véhicule..." readonly>
+                        <input type="hidden" id="id_vehicule">
                     </div>
 
                     <div class="form-row">
@@ -277,9 +397,16 @@ function renderDriverDashboard() {
             </div>
 
             <div class="dashboard-card">
-                <h3>Mes trajets publiés</h3>
-                <div id="mes-trajets">
-                    <p>Aucun trajet publié pour le moment.</p>
+                <h3>Mes trajets actifs</h3>
+                <div id="mes-trajets-actifs">
+                    <p>Aucun trajet actif pour le moment.</p>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <h3>Historique de mes trajets</h3>
+                <div id="historique-trajets">
+                    <p>Aucun trajet terminé pour le moment.</p>
                 </div>
             </div>
 
@@ -299,7 +426,7 @@ function renderDriverDashboard() {
             id_conducteur: user.id_utilisateur,
             id_ville_depart: document.getElementById("id_ville_depart").value,
             id_ville_arrivee: document.getElementById("id_ville_arrivee").value,
-            vehicule: document.getElementById("vehicule").value.trim(),
+            id_vehicule: document.getElementById("id_vehicule").value,
             date_trajet: document.getElementById("date_trajet").value,
             heure_trajet: document.getElementById("heure_trajet").value,
             prix: document.getElementById("prix").value,
@@ -311,6 +438,11 @@ function renderDriverDashboard() {
 
         if (data.id_ville_depart === data.id_ville_arrivee) {
             alert("❌ La ville de départ et la ville d'arrivée doivent être différentes.");
+            return;
+        }
+
+        if (!data.id_vehicule) {
+            alert("❌ Aucun véhicule enregistré n'est disponible pour publier ce trajet.");
             return;
         }
 
@@ -326,6 +458,8 @@ function renderDriverDashboard() {
             if (response.ok) {
                 alert("✅ Trajet publié avec succès");
                 document.getElementById("trajetForm").reset();
+                chargerVehiculeConducteur();
+                chargerVillesDansSelects();
                 chargerMesTrajets();
                 chargerReservationsConducteur();
             } else {
@@ -337,49 +471,82 @@ function renderDriverDashboard() {
         }
     });
 
+    chargerVehiculeConducteur();
+    chargerVillesDansSelects();
     chargerMesTrajets();
     chargerReservationsConducteur();
 }
 
 async function chargerMesTrajets() {
-    const zone = document.getElementById("mes-trajets");
+    const zoneActifs = document.getElementById("mes-trajets-actifs");
+    const zoneHistorique = document.getElementById("historique-trajets");
 
     try {
         const response = await fetch(`/conducteur/trajets/${user.id_utilisateur}`);
         const trajets = await response.json();
 
         if (!response.ok) {
-            zone.innerHTML = `<p>Erreur : ${trajets.error}</p>`;
+            zoneActifs.innerHTML = `<p>Erreur : ${trajets.error}</p>`;
+            zoneHistorique.innerHTML = `<p>Erreur : ${trajets.error}</p>`;
             return;
         }
 
-        if (trajets.length === 0) {
-            zone.innerHTML = "<p>Aucun trajet publié pour le moment.</p>";
-            return;
+        const trajetsActifs = trajets.filter(t => t.statut !== "termine");
+        const trajetsHistoriques = trajets.filter(t => t.statut === "termine");
+
+        zoneActifs.innerHTML = "";
+        zoneHistorique.innerHTML = "";
+
+        if (trajetsActifs.length === 0) {
+            zoneActifs.innerHTML = "<p>Aucun trajet actif pour le moment.</p>";
         }
 
-        zone.innerHTML = "";
+        if (trajetsHistoriques.length === 0) {
+            zoneHistorique.innerHTML = "<p>Aucun trajet terminé pour le moment.</p>";
+        }
 
-        trajets.forEach(trajet => {
+        trajetsActifs.forEach(trajet => {
             const card = document.createElement("div");
             card.className = "trajet-card";
 
             card.innerHTML = `
                 <h4>${trajet.ville_depart} → ${trajet.ville_arrivee}</h4>
+                <p><strong>Véhicule :</strong> ${trajet.vehicule || "Non indiqué"}</p>
                 <p><strong>Date :</strong> ${trajet.date_trajet}</p>
                 <p><strong>Heure :</strong> ${trajet.heure_trajet}</p>
                 <p><strong>Prix :</strong> ${trajet.prix}$</p>
                 <p><strong>Places :</strong> ${trajet.places_disponibles}</p>
                 <p><strong>Ambiance :</strong> ${trajet.ambiance}</p>
                 <p><strong>Statut :</strong> ${trajet.statut}</p>
+                <div class="home-actions">
+                    <button class="btn" onclick="terminerTrajet(${trajet.id_trajet})">Terminer le trajet</button>
+                </div>
             `;
 
-            zone.appendChild(card);
+            zoneActifs.appendChild(card);
+        });
+
+        trajetsHistoriques.forEach(trajet => {
+            const card = document.createElement("div");
+            card.className = "trajet-card";
+
+            card.innerHTML = `
+                <h4>${trajet.ville_depart} → ${trajet.ville_arrivee}</h4>
+                <p><strong>Véhicule :</strong> ${trajet.vehicule || "Non indiqué"}</p>
+                <p><strong>Date :</strong> ${trajet.date_trajet}</p>
+                <p><strong>Heure :</strong> ${trajet.heure_trajet}</p>
+                <p><strong>Prix :</strong> ${trajet.prix}$</p>
+                <p><strong>Statut :</strong> ${trajet.statut}</p>
+                <p class="small-text">Trajet archivé dans l'historique ✅</p>
+            `;
+
+            zoneHistorique.appendChild(card);
         });
 
     } catch (error) {
         console.error(error);
-        zone.innerHTML = "<p>Erreur lors du chargement des trajets.</p>";
+        zoneActifs.innerHTML = "<p>Erreur lors du chargement des trajets.</p>";
+        zoneHistorique.innerHTML = "<p>Erreur lors du chargement de l'historique.</p>";
     }
 }
 
@@ -414,7 +581,8 @@ async function chargerReservationsConducteur() {
                 <p><strong>Date :</strong> ${reservation.date_trajet}</p>
                 <p><strong>Heure :</strong> ${reservation.heure_trajet}</p>
                 <p><strong>Places réservées :</strong> ${reservation.nb_places}</p>
-                <p><strong>Statut :</strong> ${reservation.statut}</p>
+                <p><strong>Statut réservation :</strong> ${reservation.statut}</p>
+                <p><strong>Statut trajet :</strong> ${reservation.statut_trajet}</p>
             `;
 
             zone.appendChild(card);
