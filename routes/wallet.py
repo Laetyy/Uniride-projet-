@@ -115,3 +115,34 @@ def ajouter_carte_debit():
     finally:
         cursor.close()
         connection.close()
+
+# =============================
+# SUPPRIMER CARTE CREDIT
+@wallet_bp.route("/wallet/supprimer-carte-credit/<int:id>", methods=["DELETE"])
+def supprimer_carte_credit(id):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute("DELETE FROM CarteCredit WHERE id_carte_credit = %s", (id,))
+        connection.commit()
+        return jsonify({"message": "Carte supprimée"})
+    finally:
+        cursor.close()
+        connection.close()
+
+
+# =============================
+# SUPPRIMER CARTE DEBIT
+@wallet_bp.route("/wallet/supprimer-carte-debit/<int:id>", methods=["DELETE"])
+def supprimer_carte_debit(id):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute("DELETE FROM CarteDebit WHERE id_carte_debit = %s", (id,))
+        connection.commit()
+        return jsonify({"message": "Carte supprimée"})
+    finally:
+        cursor.close()
+        connection.close()

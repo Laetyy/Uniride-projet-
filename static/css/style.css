@@ -911,4 +911,28 @@ textarea:focus {
 
 .hidden {
     display: none;
+}.carte-premium {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #000, #333);
+    color: white;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
 }
+
+.delete-btn {
+    background: red;
+    border: none;
+    color: white;
+    font-size: 16px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background: darkred;
+}
+

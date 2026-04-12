@@ -3,7 +3,6 @@ const user = JSON.parse(localStorage.getItem("user"));
 let showTransactions = true;
 
 // =============================
-// TOGGLE SECTIONS (FIX IMPORTANT)
 function toggleSection(id) {
     document.querySelectorAll(".wallet-form").forEach(f => f.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
@@ -27,19 +26,18 @@ function toggleForm(id) {
 }
 
 // =============================
-// CHARGEMENT WALLET
 async function chargerWallet() {
     const res = await fetch(`/wallet/${user.id_utilisateur}`);
     const data = await res.json();
+
+    console.log("DATA:", data);
 
     // ===== SOLDE =====
     document.getElementById("solde").textContent =
         parseFloat(data.wallet.solde_argent).toFixed(2) + "$";
 
-    // ===== CARTES =====
     const liste = document.getElementById("cartes-liste");
     const msg = document.getElementById("no-cartes-msg");
-
     const selectCredit = document.getElementById("carte-credit-select");
     const selectDebit = document.getElementById("carte-debit-select");
 
@@ -47,43 +45,60 @@ async function chargerWallet() {
     selectCredit.innerHTML = "<option value=''>Choisir carte crédit</option>";
     selectDebit.innerHTML = "<option value=''>Choisir carte débit</option>";
 
+    // ===== MESSAGE SI VIDE =====
     if (data.cartes_credit.length === 0 && data.cartes_debit.length === 0) {
         msg.textContent = "Aucune carte enregistrée pour le moment";
     } else {
         msg.textContent = "";
     }
 
-    // CREDIT
-    data.cartes_credit.forEach(c => {
-        liste.innerHTML += `
-            <div class="carte-premium">
+    // ===== CARTES CREDIT =====
+data.cartes_credit.forEach(c => {
+    if (!c.numero_carte) return;
+
+    liste.innerHTML += `
+        <div class="carte-premium">
+            <div class="carte-info">
                 💳 **** ${c.numero_carte.slice(-4)}<br>
                 ${c.titulaire}
             </div>
-        `;
 
-        selectCredit.innerHTML += `
-            <option value="${c.id}">
-                **** ${c.numero_carte.slice(-4)}
-            </option>
-        `;
-    });
+            <button class="delete-btn" onclick="supprimerCarteCredit(${c.id})">
+                ❌
+            </button>
+        </div>
+    `;
 
-    // DEBIT
-    data.cartes_debit.forEach(c => {
-        liste.innerHTML += `
-            <div class="carte-premium">
+    selectCredit.innerHTML += `
+        <option value="${c.id}">
+            **** ${c.numero_carte.slice(-4)}
+        </option>
+    `;
+});
+
+// ===== CARTES DEBIT =====
+data.cartes_debit.forEach(c => {
+    if (!c.numero_compte) return;
+
+    liste.innerHTML += `
+        <div class="carte-premium">
+            <div class="carte-info">
                 🏦 **** ${c.numero_compte.slice(-4)}<br>
                 ${c.titulaire}
             </div>
-        `;
 
-        selectDebit.innerHTML += `
-            <option value="${c.id}">
-                **** ${c.numero_compte.slice(-4)}
-            </option>
-        `;
-    });
+            <button class="delete-btn" onclick="supprimerCarteDebit(${c.id})">
+                ❌
+            </button>
+        </div>
+    `;
+
+    selectDebit.innerHTML += `
+        <option value="${c.id}">
+            **** ${c.numero_compte.slice(-4)}
+        </option>
+    `;
+});
 
     // ===== TRANSACTIONS =====
     const transDiv = document.getElementById("transactions");
@@ -105,29 +120,12 @@ async function chargerWallet() {
 }
 
 // =============================
-// DEPOT
 function depot() {
     const carte = document.getElementById("carte-credit-select").value;
     const montant = document.getElementById("montant-depot").value;
 
-    document.getElementById("error-credit").textContent = "";
-    document.getElementById("error-montant-depot").textContent = "";
-
-    let valid = true;
-
-    if (!carte) {
-        document.getElementById("error-credit").textContent =
-            "Veuillez sélectionner une carte crédit";
-        valid = false;
-    }
-
-    if (!montant || montant <= 0) {
-        document.getElementById("error-montant-depot").textContent =
-            "Le montant doit être supérieur à 0";
-        valid = false;
-    }
-
-    if (!valid) return;
+    if (!carte) return alert("Sélectionne une carte");
+    if (!montant || montant <= 0) return alert("Montant invalide");
 
     fetch("/wallet/depot", {
         method: "POST",
@@ -136,38 +134,16 @@ function depot() {
             id_utilisateur: user.id_utilisateur,
             montant
         })
-    })
-    .then(res => res.json())
-    .then(() => {
-        chargerWallet();
-        alert("Dépôt effectué ✅");
-    });
+    }).then(() => chargerWallet());
 }
 
 // =============================
-// RETRAIT
 function retrait() {
     const carte = document.getElementById("carte-debit-select").value;
     const montant = document.getElementById("montant-retrait").value;
 
-    document.getElementById("error-debit").textContent = "";
-    document.getElementById("error-montant-retrait").textContent = "";
-
-    let valid = true;
-
-    if (!carte) {
-        document.getElementById("error-debit").textContent =
-            "Veuillez sélectionner une carte débit";
-        valid = false;
-    }
-
-    if (!montant || montant <= 0) {
-        document.getElementById("error-montant-retrait").textContent =
-            "Montant invalide";
-        valid = false;
-    }
-
-    if (!valid) return;
+    if (!carte) return alert("Sélectionne une carte");
+    if (!montant || montant <= 0) return alert("Montant invalide");
 
     fetch("/wallet/retrait", {
         method: "POST",
@@ -176,26 +152,17 @@ function retrait() {
             id_utilisateur: user.id_utilisateur,
             montant
         })
-    })
-    .then(res => res.json())
-    .then(() => {
-        chargerWallet();
-        alert("Retrait effectué ✅");
-    });
+    }).then(() => chargerWallet());
 }
 
 // =============================
-// AJOUT CARTE CREDIT
 function ajouterCarteCredit() {
     const numero = document.getElementById("cc-numero").value;
     const titulaire = document.getElementById("cc-nom").value;
     const exp = document.getElementById("cc-exp").value;
 
-    document.getElementById("error-cc-numero").textContent = "";
-
     if (!numero || numero.length !== 16) {
-        document.getElementById("error-cc-numero").textContent =
-            "Le numéro doit contenir 16 chiffres";
+        alert("Numéro invalide (16 chiffres)");
         return;
     }
 
@@ -208,23 +175,19 @@ function ajouterCarteCredit() {
             titulaire,
             expiration: exp
         })
-    })
-    .then(res => res.json())
-    .then(() => {
+    }).then(() => {
         chargerWallet();
-        alert("Carte crédit ajoutée ✅");
     });
 }
 
 // =============================
-// AJOUT CARTE DEBIT
 function ajouterCarteDebit() {
     const compte = document.getElementById("cd-compte").value;
     const transit = document.getElementById("cd-transit").value;
     const institution = document.getElementById("cd-institution").value;
 
     if (!compte || !transit || !institution) {
-        alert("Tous les champs sont obligatoires");
+        alert("Champs invalides");
         return;
     }
 
@@ -233,17 +196,45 @@ function ajouterCarteDebit() {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             id_utilisateur: user.id_utilisateur,
+            titulaire: "Compte bancaire",
             compte,
             transit,
             institution
         })
-    })
-    .then(res => res.json())
-    .then(() => {
+    }).then(() => {
         chargerWallet();
-        alert("Carte débit ajoutée ✅");
     });
 }
 
 // =============================
-chargerWallet();
+document.addEventListener("DOMContentLoaded", () => {
+    chargerWallet();
+});
+
+// =============================
+// SUPPRIMER CARTE CREDIT
+function supprimerCarteCredit(id) {
+    if (!confirm("Supprimer cette carte ?")) return;
+
+    fetch(`/wallet/supprimer-carte-credit/${id}`, {
+        method: "DELETE"
+    })
+    .then(res => res.json())
+    .then(() => {
+        chargerWallet();
+    });
+}
+
+// =============================
+// SUPPRIMER CARTE DEBIT
+function supprimerCarteDebit(id) {
+    if (!confirm("Supprimer cette carte ?")) return;
+
+    fetch(`/wallet/supprimer-carte-debit/${id}`, {
+        method: "DELETE"
+    })
+    .then(res => res.json())
+    .then(() => {
+        chargerWallet();
+    });
+}
