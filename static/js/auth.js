@@ -21,6 +21,12 @@ if (registerForm) {
     registerForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
+        const registerBtn = document.getElementById("registerBtn");
+        const originalText = registerBtn.textContent;
+
+        registerBtn.disabled = true;
+        registerBtn.textContent = "Chargement...";
+
         const nom_utilisateur = document.getElementById("nom_utilisateur").value.trim();
         const email = document.getElementById("email").value.trim().toLowerCase();
         const mot_de_passe = document.getElementById("mot_de_passe").value;
@@ -31,24 +37,32 @@ if (registerForm) {
         if (nom_utilisateur.length > 10) {
             message.textContent = "❌ Le nom d'utilisateur ne doit pas dépasser 10 caractères";
             message.style.color = "red";
+            registerBtn.disabled = false;
+            registerBtn.textContent = originalText;
             return;
         }
 
         if (!motDePasseValide(mot_de_passe)) {
             message.textContent = "❌ Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre";
             message.style.color = "red";
+            registerBtn.disabled = false;
+            registerBtn.textContent = originalText;
             return;
         }
 
         if (!telephoneCanadienValide(telephone)) {
             message.textContent = "❌ Le numéro doit être au format canadien : +1 suivi de 10 chiffres";
             message.style.color = "red";
+            registerBtn.disabled = false;
+            registerBtn.textContent = originalText;
             return;
         }
 
         if (!emailValide(email)) {
             message.textContent = "❌ Adresse email invalide";
             message.style.color = "red";
+            registerBtn.disabled = false;
+            registerBtn.textContent = originalText;
             return;
         }
 
@@ -74,16 +88,21 @@ if (registerForm) {
                 message.textContent = "✅ " + (result.message || "Inscription réussie !");
                 message.style.color = "green";
                 registerForm.reset();
+
                 setTimeout(() => {
                     window.location.href = "/login-page";
                 }, 1500);
             } else {
                 message.textContent = "❌ " + (result.error || "Erreur");
                 message.style.color = "red";
+                registerBtn.disabled = false;
+                registerBtn.textContent = originalText;
             }
         } catch (error) {
             message.textContent = "❌ Erreur de connexion : " + error.message;
             message.style.color = "red";
+            registerBtn.disabled = false;
+            registerBtn.textContent = originalText;
         }
     });
 }
@@ -91,6 +110,12 @@ if (registerForm) {
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
+
+        const loginBtn = document.getElementById("loginBtn");
+        const originalText = loginBtn.textContent;
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = "Chargement...";
 
         const data = {
             identifiant: document.getElementById("identifiant").value.trim(),
@@ -110,16 +135,25 @@ if (loginForm) {
                 localStorage.setItem("user", JSON.stringify(result.user));
                 message.textContent = "✅ " + result.message;
                 message.style.color = "green";
+
                 setTimeout(() => {
-                    window.location.href = "/home";
+                    if (result.user.role === "admin") {
+                        window.location.href = "/admin-page";
+                    } else {
+                        window.location.href = "/home";
+                    }
                 }, 1000);
             } else {
                 message.textContent = "❌ " + (result.error || "Erreur");
                 message.style.color = "red";
+                loginBtn.disabled = false;
+                loginBtn.textContent = originalText;
             }
         } catch (error) {
             message.textContent = "❌ Erreur serveur : " + error.message;
             message.style.color = "red";
+            loginBtn.disabled = false;
+            loginBtn.textContent = originalText;
         }
     });
 }

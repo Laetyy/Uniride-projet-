@@ -1,12 +1,31 @@
-from flask import Blueprint, jsonify, request, render_template
+from flask import Blueprint, jsonify, request, render_template, session
 from config import get_connection
 
 admin_bp = Blueprint("admin", __name__)
 
 
+def verifier_admin():
+    user = session.get("user")
+
+    if not user:
+        return None, (jsonify({"error": "Utilisateur non connecté"}), 401)
+
+    if user.get("role") != "admin":
+        return None, (jsonify({"error": "Accès refusé : admin uniquement"}), 403)
+
+    if user.get("statut") != "actif":
+        return None, (jsonify({"error": "Compte non actif"}), 403)
+
+    return user, None
+
+
 @admin_bp.route("/admin", methods=["GET"])
 def admin_page():
-    return render_template("admin.html")
+    user, error = verifier_admin()
+    if error:
+        return error
+
+    return render_template("admin.html", user=user)
 
 
 # =========================
@@ -14,6 +33,10 @@ def admin_page():
 # =========================
 @admin_bp.route("/admin/stats", methods=["GET"])
 def admin_stats():
+    user, error = verifier_admin()
+    if error:
+        return error
+
     connection = None
     cursor = None
 
@@ -45,7 +68,7 @@ def admin_stats():
         cursor.execute("""
             SELECT COUNT(*) AS total
             FROM Plainte
-            WHERE statut_plainte IN ('ouverte', 'traitee')
+            WHERE statut_plainte = 'ouverte'
         """)
         stats["plaintes_ouvertes"] = cursor.fetchone()["total"]
 
@@ -66,6 +89,10 @@ def admin_stats():
 # =========================
 @admin_bp.route("/admin/utilisateurs", methods=["GET"])
 def admin_get_utilisateurs():
+    user, error = verifier_admin()
+    if error:
+        return error
+
     connection = None
     cursor = None
 
@@ -89,9 +116,9 @@ def admin_get_utilisateurs():
         """)
         utilisateurs = cursor.fetchall()
 
-        for user in utilisateurs:
-            if user.get("date_creation"):
-                user["date_creation"] = str(user["date_creation"])
+        for utilisateur in utilisateurs:
+            if utilisateur.get("date_creation"):
+                utilisateur["date_creation"] = str(utilisateur["date_creation"])
 
         return jsonify(utilisateurs), 200
 
@@ -107,6 +134,13 @@ def admin_get_utilisateurs():
 
 @admin_bp.route("/admin/utilisateur/<int:id_utilisateur>/suspendre", methods=["PUT"])
 def suspendre_utilisateur(id_utilisateur):
+    user, error = verifier_admin()
+    if error:
+        return error
+
+    if user["id_utilisateur"] == id_utilisateur:
+        return jsonify({"error": "Tu ne peux pas suspendre ton propre compte"}), 400
+
     connection = None
     cursor = None
 
@@ -119,6 +153,10 @@ def suspendre_utilisateur(id_utilisateur):
             SET statut = 'suspendu'
             WHERE id_utilisateur = %s
         """, (id_utilisateur,))
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Utilisateur introuvable"}), 404
+
         connection.commit()
 
         return jsonify({"message": "Utilisateur suspendu avec succès"}), 200
@@ -137,6 +175,10 @@ def suspendre_utilisateur(id_utilisateur):
 
 @admin_bp.route("/admin/utilisateur/<int:id_utilisateur>/reactiver", methods=["PUT"])
 def reactiver_utilisateur(id_utilisateur):
+    user, error = verifier_admin()
+    if error:
+        return error
+
     connection = None
     cursor = None
 
@@ -149,6 +191,10 @@ def reactiver_utilisateur(id_utilisateur):
             SET statut = 'actif'
             WHERE id_utilisateur = %s
         """, (id_utilisateur,))
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Utilisateur introuvable"}), 404
+
         connection.commit()
 
         return jsonify({"message": "Utilisateur réactivé avec succès"}), 200
@@ -170,6 +216,10 @@ def reactiver_utilisateur(id_utilisateur):
 # =========================
 @admin_bp.route("/admin/demandes-certification", methods=["GET"])
 def admin_get_demandes():
+    user, error = verifier_admin()
+    if error:
+        return error
+
     connection = None
     cursor = None
 
@@ -219,6 +269,10 @@ def admin_get_demandes():
 
 @admin_bp.route("/admin/demande/<int:id_demande>/accepter", methods=["PUT"])
 def accepter_demande(id_demande):
+    user, error = verifier_admin()
+    if error:
+        return error
+
     connection = None
     cursor = None
 
@@ -271,6 +325,10 @@ def accepter_demande(id_demande):
 
 @admin_bp.route("/admin/demande/<int:id_demande>/refuser", methods=["PUT"])
 def refuser_demande(id_demande):
+    user, error = verifier_admin()
+    if error:
+        return error
+
     connection = None
     cursor = None
 
@@ -287,6 +345,10 @@ def refuser_demande(id_demande):
                 commentaire_admin = %s
             WHERE id_demande = %s
         """, (commentaire, id_demande))
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Demande introuvable"}), 404
+
         connection.commit()
 
         return jsonify({"message": "Demande refusée avec succès"}), 200
@@ -308,6 +370,10 @@ def refuser_demande(id_demande):
 # =========================
 @admin_bp.route("/admin/trajets", methods=["GET"])
 def admin_get_trajets():
+    user, error = verifier_admin()
+    if error:
+        return error
+
     connection = None
     cursor = None
 
@@ -357,6 +423,10 @@ def admin_get_trajets():
 # =========================
 @admin_bp.route("/admin/wallets", methods=["GET"])
 def admin_get_wallets():
+    user, error = verifier_admin()
+    if error:
+        return error
+
     connection = None
     cursor = None
 
@@ -397,6 +467,10 @@ def admin_get_wallets():
 
 @admin_bp.route("/admin/wallet/<int:id_wallet>/ajuster", methods=["PUT"])
 def ajuster_wallet(id_wallet):
+    user, error = verifier_admin()
+    if error:
+        return error
+
     connection = None
     cursor = None
 
@@ -418,6 +492,10 @@ def ajuster_wallet(id_wallet):
             WHERE id_wallet = %s
         """, (montant_argent, montant_points, id_wallet))
 
+        if cursor.rowcount == 0:
+            connection.rollback()
+            return jsonify({"error": "Wallet introuvable"}), 404
+
         cursor.execute("""
             INSERT INTO HistoriqueWallet (
                 id_wallet,
@@ -432,6 +510,9 @@ def ajuster_wallet(id_wallet):
         connection.commit()
 
         return jsonify({"message": "Wallet ajusté avec succès"}), 200
+
+    except ValueError:
+        return jsonify({"error": "Montant invalide"}), 400
 
     except Exception as e:
         if connection:
@@ -450,6 +531,10 @@ def ajuster_wallet(id_wallet):
 # =========================
 @admin_bp.route("/admin/plaintes", methods=["GET"])
 def admin_get_plaintes():
+    user, error = verifier_admin()
+    if error:
+        return error
+
     connection = None
     cursor = None
 
@@ -491,6 +576,10 @@ def admin_get_plaintes():
 
 @admin_bp.route("/admin/plainte/<int:id_plainte>/statut", methods=["PUT"])
 def admin_modifier_statut_plainte(id_plainte):
+    user, error = verifier_admin()
+    if error:
+        return error
+
     connection = None
     cursor = None
 
@@ -509,6 +598,10 @@ def admin_modifier_statut_plainte(id_plainte):
             SET statut_plainte = %s
             WHERE id_plainte = %s
         """, (statut, id_plainte))
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Plainte introuvable"}), 404
+
         connection.commit()
 
         return jsonify({"message": "Statut de la plainte mis à jour"}), 200

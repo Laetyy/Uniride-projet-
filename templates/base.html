@@ -30,61 +30,92 @@
         {% block content %}{% endblock %}
     </div>
 
-   <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
 
-        function updateNavbar() {
-            const user = JSON.parse(localStorage.getItem("user"));
+            async function syncUserFromSession() {
+                try {
+                    const response = await fetch("/me");
+                    const data = await response.json();
 
-            const connectedLinks = document.querySelectorAll(".nav-connected");
-            const disconnectedLinks = document.querySelectorAll(".nav-disconnected");
-            const adminLinks = document.querySelectorAll(".nav-admin");
+                    if (response.ok && data.user) {
+                        localStorage.setItem("user", JSON.stringify(data.user));
+                        return data.user;
+                    } else {
+                        localStorage.removeItem("user");
+                        return null;
+                    }
+                } catch (error) {
+                    console.error("Erreur sync session :", error);
+                    localStorage.removeItem("user");
+                    return null;
+                }
+            }
 
-            if (user) {
-                connectedLinks.forEach(link => {
-                    link.style.display = "inline-block";
-                });
+            function updateNavbar(user) {
+                const connectedLinks = document.querySelectorAll(".nav-connected");
+                const disconnectedLinks = document.querySelectorAll(".nav-disconnected");
+                const adminLinks = document.querySelectorAll(".nav-admin");
 
-                disconnectedLinks.forEach(link => {
-                    link.style.display = "none";
-                });
-
-                if (user.role === "admin") {
-                    adminLinks.forEach(link => {
+                if (user) {
+                    connectedLinks.forEach(link => {
                         link.style.display = "inline-block";
                     });
+
+                    disconnectedLinks.forEach(link => {
+                        link.style.display = "none";
+                    });
+
+                    if (user.role === "admin") {
+                        adminLinks.forEach(link => {
+                            link.style.display = "inline-block";
+                        });
+                    } else {
+                        adminLinks.forEach(link => {
+                            link.style.display = "none";
+                        });
+                    }
                 } else {
+                    connectedLinks.forEach(link => {
+                        link.style.display = "none";
+                    });
+
+                    disconnectedLinks.forEach(link => {
+                        link.style.display = "inline-block";
+                    });
+
                     adminLinks.forEach(link => {
                         link.style.display = "none";
                     });
                 }
-            } else {
-                connectedLinks.forEach(link => {
-                    link.style.display = "none";
-                });
-
-                disconnectedLinks.forEach(link => {
-                    link.style.display = "inline-block";
-                });
-
-                adminLinks.forEach(link => {
-                    link.style.display = "none";
-                });
             }
-        }
 
-        const logoutLink = document.getElementById("logout-link");
+            async function logout() {
+                try {
+                    await fetch("/logout", {
+                        method: "POST"
+                    });
+                } catch (error) {
+                    console.error("Erreur logout :", error);
+                }
 
-        if (logoutLink) {
-            logoutLink.addEventListener("click", function (e) {
-                e.preventDefault();
                 localStorage.removeItem("user");
                 window.location.href = "/home";
-            });
-        }
+            }
 
-        updateNavbar();
-    });
-</script>
+            const logoutLink = document.getElementById("logout-link");
+
+            if (logoutLink) {
+                logoutLink.addEventListener("click", async function (e) {
+                    e.preventDefault();
+                    await logout();
+                });
+            }
+
+            syncUserFromSession().then(user => {
+                updateNavbar(user);
+            });
+        });
+    </script>
 </body>
 </html>

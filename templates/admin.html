@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Administration UniRide</h2>
+<h2 class="admin-page-title">Administration UniRide</h2>
 
 <div class="dashboard-card">
     <h3>Statistiques</h3>
@@ -46,6 +46,30 @@
 </div>
 
 <script>
+async function verifierAdmin() {
+    try {
+        const response = await fetch("/me");
+        const data = await response.json();
+
+        if (!response.ok) {
+            window.location.href = "/login-page";
+            return false;
+        }
+
+        if (!data.user || data.user.role !== "admin") {
+            alert("Accès refusé");
+            window.location.href = "/home";
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Erreur verifierAdmin :", error);
+        window.location.href = "/login-page";
+        return false;
+    }
+}
+
 async function chargerStatsAdmin() {
     const zone = document.getElementById("admin-stats");
 
@@ -54,7 +78,7 @@ async function chargerStatsAdmin() {
         const stats = await response.json();
 
         if (!response.ok) {
-            zone.innerHTML = `<p>Erreur : ${stats.error}</p>`;
+            zone.innerHTML = `<p>Erreur : ${stats.error || "Impossible de charger les statistiques"}</p>`;
             return;
         }
 
@@ -64,11 +88,11 @@ async function chargerStatsAdmin() {
             <p><strong>Total trajets :</strong> ${stats.total_trajets}</p>
             <p><strong>Total réservations :</strong> ${stats.total_reservations}</p>
             <p><strong>Demandes en attente :</strong> ${stats.demandes_en_attente}</p>
-            <p><strong>Plaintes ouvertes / traitées :</strong> ${stats.plaintes_ouvertes}</p>
+            <p><strong>Plaintes ouvertes :</strong> ${stats.plaintes_ouvertes}</p>
         `;
     } catch (error) {
-        zone.innerHTML = "<p>Erreur chargement statistiques.</p>";
         console.error(error);
+        zone.innerHTML = "<p>Erreur chargement statistiques.</p>";
     }
 }
 
@@ -80,11 +104,11 @@ async function chargerUtilisateurs() {
         const utilisateurs = await response.json();
 
         if (!response.ok) {
-            zone.innerHTML = `<p>Erreur : ${utilisateurs.error}</p>`;
+            zone.innerHTML = `<p>Erreur : ${utilisateurs.error || "Impossible de charger les utilisateurs"}</p>`;
             return;
         }
 
-        if (utilisateurs.length === 0) {
+        if (!utilisateurs.length) {
             zone.innerHTML = "<p>Aucun utilisateur trouvé.</p>";
             return;
         }
@@ -109,10 +133,9 @@ async function chargerUtilisateurs() {
 
             zone.appendChild(card);
         });
-
     } catch (error) {
-        zone.innerHTML = "<p>Erreur chargement utilisateurs.</p>";
         console.error(error);
+        zone.innerHTML = "<p>Erreur chargement utilisateurs.</p>";
     }
 }
 
@@ -124,11 +147,11 @@ async function chargerDemandes() {
         const demandes = await response.json();
 
         if (!response.ok) {
-            zone.innerHTML = `<p>Erreur : ${demandes.error}</p>`;
+            zone.innerHTML = `<p>Erreur : ${demandes.error || "Impossible de charger les demandes"}</p>`;
             return;
         }
 
-        if (demandes.length === 0) {
+        if (!demandes.length) {
             zone.innerHTML = "<p>Aucune demande de certification.</p>";
             return;
         }
@@ -157,10 +180,9 @@ async function chargerDemandes() {
 
             zone.appendChild(card);
         });
-
     } catch (error) {
-        zone.innerHTML = "<p>Erreur chargement demandes.</p>";
         console.error(error);
+        zone.innerHTML = "<p>Erreur chargement demandes.</p>";
     }
 }
 
@@ -172,11 +194,11 @@ async function chargerTrajetsAdmin() {
         const trajets = await response.json();
 
         if (!response.ok) {
-            zone.innerHTML = `<p>Erreur : ${trajets.error}</p>`;
+            zone.innerHTML = `<p>Erreur : ${trajets.error || "Impossible de charger les trajets"}</p>`;
             return;
         }
 
-        if (trajets.length === 0) {
+        if (!trajets.length) {
             zone.innerHTML = "<p>Aucun trajet trouvé.</p>";
             return;
         }
@@ -199,10 +221,9 @@ async function chargerTrajetsAdmin() {
 
             zone.appendChild(card);
         });
-
     } catch (error) {
-        zone.innerHTML = "<p>Erreur chargement trajets.</p>";
         console.error(error);
+        zone.innerHTML = "<p>Erreur chargement trajets.</p>";
     }
 }
 
@@ -214,11 +235,11 @@ async function chargerWallets() {
         const wallets = await response.json();
 
         if (!response.ok) {
-            zone.innerHTML = `<p>Erreur : ${wallets.error}</p>`;
+            zone.innerHTML = `<p>Erreur : ${wallets.error || "Impossible de charger les wallets"}</p>`;
             return;
         }
 
-        if (wallets.length === 0) {
+        if (!wallets.length) {
             zone.innerHTML = "<p>Aucun wallet trouvé.</p>";
             return;
         }
@@ -241,10 +262,9 @@ async function chargerWallets() {
 
             zone.appendChild(card);
         });
-
     } catch (error) {
-        zone.innerHTML = "<p>Erreur chargement wallets.</p>";
         console.error(error);
+        zone.innerHTML = "<p>Erreur chargement wallets.</p>";
     }
 }
 
@@ -256,11 +276,11 @@ async function chargerPlaintes() {
         const plaintes = await response.json();
 
         if (!response.ok) {
-            zone.innerHTML = `<p>Erreur : ${plaintes.error}</p>`;
+            zone.innerHTML = `<p>Erreur : ${plaintes.error || "Impossible de charger les plaintes"}</p>`;
             return;
         }
 
-        if (plaintes.length === 0) {
+        if (!plaintes.length) {
             zone.innerHTML = "<p>Aucune plainte trouvée.</p>";
             return;
         }
@@ -286,10 +306,9 @@ async function chargerPlaintes() {
 
             zone.appendChild(card);
         });
-
     } catch (error) {
-        zone.innerHTML = "<p>Erreur chargement plaintes.</p>";
         console.error(error);
+        zone.innerHTML = "<p>Erreur chargement plaintes.</p>";
     }
 }
 
@@ -379,9 +398,9 @@ async function refuserDemande(id_demande) {
 }
 
 async function ajusterWallet(id_wallet) {
-    const montant_argent = prompt("Montant argent à ajouter (ou négatif pour retirer) :", "0");
-    const montant_points = prompt("Montant points à ajouter (ou négatif pour retirer) :", "0");
-    const description = prompt("Description de l’ajustement :", "Ajustement admin") || "Ajustement admin";
+    const montant_argent = prompt("Montant argent à ajouter ou retirer :", "0");
+    const montant_points = prompt("Montant points à ajouter ou retirer :", "0");
+    const description = prompt("Description :", "Ajustement admin") || "Ajustement admin";
 
     try {
         const response = await fetch(`/admin/wallet/${id_wallet}/ajuster`, {
@@ -431,11 +450,18 @@ async function changerStatutPlainte(id_plainte, statut) {
     }
 }
 
-chargerStatsAdmin();
-chargerUtilisateurs();
-chargerDemandes();
-chargerTrajetsAdmin();
-chargerWallets();
-chargerPlaintes();
+async function initAdmin() {
+    const ok = await verifierAdmin();
+    if (!ok) return;
+
+    await chargerStatsAdmin();
+    await chargerUtilisateurs();
+    await chargerDemandes();
+    await chargerTrajetsAdmin();
+    await chargerWallets();
+    await chargerPlaintes();
+}
+
+document.addEventListener("DOMContentLoaded", initAdmin);
 </script>
 {% endblock %}

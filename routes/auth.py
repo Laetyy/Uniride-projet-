@@ -1,7 +1,7 @@
 import os
 import re
 import uuid
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, session
 import pymysql
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -142,9 +142,9 @@ def login():
                 role,
                 statut
             FROM Utilisateur
-            WHERE nom_utilisateur = %s OR email = %s
+            WHERE nom_utilisateur = %s OR email = %s OR telephone = %s
             LIMIT 1
-        """, (identifiant, identifiant))
+        """, (identifiant, identifiant, identifiant))
 
         user = cursor.fetchone()
 
@@ -170,6 +170,8 @@ def login():
             "statut": user["statut"]
         }
 
+        session["user"] = user_data
+
         return jsonify({
             "message": "Connexion réussie",
             "user": user_data
@@ -183,6 +185,22 @@ def login():
             cursor.close()
         if connection:
             connection.close()
+
+
+@auth_bp.route("/logout", methods=["POST"])
+def logout():
+    session.pop("user", None)
+    return jsonify({"message": "Déconnexion réussie"}), 200
+
+
+@auth_bp.route("/me", methods=["GET"])
+def get_me():
+    user = session.get("user")
+
+    if not user:
+        return jsonify({"error": "Utilisateur non connecté"}), 401
+
+    return jsonify({"user": user}), 200
 
 
 @auth_bp.route("/profil/<int:id_utilisateur>", methods=["GET"])
@@ -284,6 +302,18 @@ def update_profile(id_utilisateur):
         """, (id_utilisateur,))
         updated_user = cursor.fetchone()
 
+        if session.get("user") and session["user"]["id_utilisateur"] == id_utilisateur:
+            session["user"].update({
+                "nom": updated_user["nom"],
+                "prenom": updated_user["prenom"],
+                "email": updated_user["email"],
+                "telephone": updated_user["telephone"],
+                "bio": updated_user["bio"],
+                "photo_profil": updated_user["photo_profil"],
+                "role": updated_user["role"],
+                "statut": updated_user["statut"]
+            })
+
         return jsonify({
             "message": "Profil mis à jour avec succès",
             "user": updated_user
@@ -343,6 +373,9 @@ def upload_photo():
         """, (relative_path, id_utilisateur))
 
         connection.commit()
+
+        if session.get("user") and session["user"]["id_utilisateur"] == int(id_utilisateur):
+            session["user"]["photo_profil"] = relative_path
 
         return jsonify({
             "message": "Photo uploadée avec succès",

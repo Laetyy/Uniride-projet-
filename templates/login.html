@@ -18,7 +18,7 @@
             <label for="mot_de_passe">Mot de passe</label>
             <input type="password" id="mot_de_passe" placeholder="Entre ton mot de passe" required>
 
-            <button type="submit" class="btn">Se connecter</button>
+            <button type="submit" class="btn" id="loginBtn">Se connecter</button>
         </form>
 
         <p id="message"></p>
@@ -27,22 +27,4 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
-<script>
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
-    const loginBtn = e.target.querySelector("button");
-    const originalText = loginBtn.textContent;
-    loginBtn.disabled = true;
-    loginBtn.textContent = "Chargement...";
-
-    setTimeout(() => {
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (user) {
-            window.location.href = "/home";
-        } else {
-            loginBtn.disabled = false;
-            loginBtn.textContent = originalText;
-        }
-    }, 500);
-});
-</script>
 {% endblock %}
