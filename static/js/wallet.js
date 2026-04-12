@@ -57,17 +57,32 @@ data.cartes_credit.forEach(c => {
     if (!c.numero_carte) return;
 
     liste.innerHTML += `
-        <div class="carte-premium">
-            <div class="carte-info">
-                💳 **** ${c.numero_carte.slice(-4)}<br>
-                ${c.titulaire}
-            </div>
+<div class="carte-premium credit">
 
-            <button class="delete-btn" onclick="supprimerCarteCredit(${c.id})">
-                ❌
-            </button>
-        </div>
-    `;
+    <div class="card-bg"></div>
+
+    <!-- DELETE -->
+    <button class="delete-btn" onclick="supprimerCarteCredit(${c.id})">✕</button>
+
+    <!-- HEADER -->
+    <div class="carte-header">
+        <div class="chip"></div>
+
+        <div class="card-type">VISA</div>
+    </div>
+
+    <!-- NUMERO -->
+    <div class="carte-number">
+        •••• •••• •••• ${c.numero_carte.slice(-4)}
+    </div>
+
+    <!-- FOOTER -->
+    <div class="carte-footer">
+        <div class="card-holder">${c.titulaire.toUpperCase()}</div>
+    </div>
+
+</div>
+`;
 
     selectCredit.innerHTML += `
         <option value="${c.id}">
@@ -81,17 +96,33 @@ data.cartes_debit.forEach(c => {
     if (!c.numero_compte) return;
 
     liste.innerHTML += `
-        <div class="carte-premium">
-            <div class="carte-info">
-                🏦 **** ${c.numero_compte.slice(-4)}<br>
-                ${c.titulaire}
-            </div>
+<div class="carte-premium debit">
 
-            <button class="delete-btn" onclick="supprimerCarteDebit(${c.id})">
-                ❌
-            </button>
-        </div>
-    `;
+    <div class="card-bg"></div>
+
+    <!-- DELETE -->
+    <button class="delete-btn" onclick="supprimerCarteDebit(${c.id})">✕</button>
+
+    <!-- HEADER -->
+    <div class="carte-header">
+        <div class="bank-name">DEBIT</div>
+    </div>
+
+    <!-- CHIP -->
+    <div class="chip"></div>
+
+    <!-- NUMERO -->
+    <div class="carte-number">
+        •••• •••• •••• ${c.numero_compte.slice(-4)}
+    </div>
+
+    <!-- FOOTER -->
+    <div class="carte-footer">
+        <div class="card-holder">${c.titulaire.toUpperCase()}</div>
+    </div>
+
+</div>
+`;
 
     selectDebit.innerHTML += `
         <option value="${c.id}">

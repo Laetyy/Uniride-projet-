@@ -936,3 +936,370 @@ textarea:focus {
     background: darkred;
 }
 
+/* ===== CARTE PREMIUM ===== */
+.carte-premium {
+    width: 100%;
+    max-width: 320px;
+    height: 180px;
+    border-radius: 18px;
+    padding: 18px;
+    color: white;
+    position: relative;
+    margin-bottom: 15px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    font-family: 'Segoe UI', sans-serif;
+
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease;
+}
+
+.carte-premium:hover {
+    transform: scale(1.03);
+}
+
+/* ===== TYPES ===== */
+.carte-premium.visa {
+    background: linear-gradient(135deg, #1a1f71, #0a0f3c);
+}
+
+.carte-premium.debit {
+    background: linear-gradient(135deg, #2c3e50, #000000);
+}
+
+/* ===== TOP ===== */
+.carte-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.puce {
+    font-size: 22px;
+}
+
+.type {
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* ===== NUMERO ===== */
+.carte-numero {
+    font-size: 20px;
+    letter-spacing: 2px;
+    margin: 10px 0;
+}
+
+/* ===== BAS ===== */
+.carte-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.titulaire {
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+/* ===== DELETE ===== */
+.delete-btn {
+    background: red;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+
+
+/* ===== CARTE PREMIUM APPLE STYLE ===== */
+.carte-premium {
+    width: 100%;
+    max-width: 340px;
+    height: 200px;
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+
+    color: white;
+    font-family: 'Segoe UI', sans-serif;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    box-shadow:
+        0 20px 40px rgba(0,0,0,0.4),
+        inset 0 1px 1px rgba(255,255,255,0.2);
+
+    transition: all 0.3s ease;
+}
+
+/* ===== GRADIENT BANQUE ===== */
+.carte-premium.visa {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+}
+
+/* ===== EFFET LUMIÈRE ===== */
+.carte-overlay {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        120deg,
+        transparent 30%,
+        rgba(255,255,255,0.15),
+        transparent 70%
+    );
+    transform: rotate(25deg);
+    animation: shine 5s infinite linear;
+}
+
+@keyframes shine {
+    0% { transform: translateX(-100%) rotate(25deg); }
+    100% { transform: translateX(100%) rotate(25deg); }
+}
+
+/* ===== CHIP (PUCE REALISTE) ===== */
+.chip {
+    width: 45px;
+    height: 32px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #d4af37, #f1d27a);
+    box-shadow: inset 0 2px 3px rgba(0,0,0,0.3);
+}
+
+/* ===== HEADER ===== */
+.carte-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand {
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+/* ===== NUMERO ===== */
+.carte-number {
+    font-size: 22px;
+    letter-spacing: 3px;
+    text-align: center;
+    margin: 15px 0;
+}
+
+/* ===== FOOTER ===== */
+.carte-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-holder {
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* ===== DELETE BUTTON ===== */
+.delete-btn {
+    background: rgba(255,0,0,0.9);
+    border: none;
+    color: white;
+    font-size: 16px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.delete-btn:hover {
+    background: red;
+}
+
+/* ===== HOVER EFFECT ===== */
+.carte-premium:hover {
+    transform: scale(1.05) rotate(-1deg);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+}
+
+/* ===== CARTE DEBIT CANADIENNE ===== */
+.carte-premium.debit {
+    background: linear-gradient(135deg, #008c5f, #006c47);
+    position: relative;
+    border-radius: 20px;
+    padding: 20px;
+    height: 190px;
+    color: white;
+    overflow: hidden;
+}
+
+/* ===== HEXAGON PATTERN ===== */
+.card-bg {
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.08), transparent);
+    top: -50%;
+    left: -50%;
+    transform: rotate(20deg);
+}
+
+/* ===== HEADER ===== */
+.carte-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.bank-name {
+    letter-spacing: 1px;
+}
+
+.type {
+    opacity: 0.8;
+}
+
+/* ===== CHIP POSITION (TRÈS IMPORTANT) ===== */
+.chip {
+    position: absolute;
+    top: 65px;
+    left: 25px;
+    width: 50px;
+    height: 35px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, gold, #d4af37);
+}
+
+/* ===== NUMERO ===== */
+.carte-number {
+    position: absolute;
+    bottom: 70px;
+    left: 25px;
+    font-size: 20px;
+    letter-spacing: 3px;
+}
+
+/* ===== FOOTER ===== */
+.carte-footer {
+    position: absolute;
+    bottom: 15px;
+    left: 25px;
+    right: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-holder {
+    font-size: 12px;
+}
+
+/* ===== INTERAC STYLE ===== */
+.interac-logo {
+    background: #ffcc00;
+    color: black;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+/* ===== DELETE ===== */
+.delete-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: red;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* ===== CHIP ===== */
+.chip {
+    position: absolute;
+    top: 70px;
+    left: 25px;
+    width: 50px;
+    height: 35px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, gold, #d4af37);
+    z-index: 2;
+}
+
+/* ===== NUMERO (DECALE A DROITE) ===== */
+.carte-number {
+    position: absolute;
+    bottom: 70px;
+    left: 100px; /* IMPORTANT : évite la puce */
+    font-size: 20px;
+    letter-spacing: 3px;
+}
+
+/* ===== DELETE BUTTON (TOP RIGHT CLEAN) ===== */
+.delete-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: red;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    z-index: 3;
+}
+
+/* ===== FOOTER ===== */
+.carte-footer {
+    position: absolute;
+    bottom: 15px;
+    left: 25px;
+    right: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ===== DELETE BUTTON (GLOBAL POUR TOUTES LES CARTES) ===== */
+.delete-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: red;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    z-index: 5;
+    font-weight: bold;
+}
+
+/* ===== HEADER CREDIT ===== */
+.carte-premium.credit .carte-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ===== TYPE CARTE (VISA) ===== */
+.card-type {
+    font-weight: bold;
+    letter-spacing: 2px;
+    font-size: 14px;
+}
