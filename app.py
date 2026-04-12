@@ -6,6 +6,7 @@ from routes.reservation import reservation_bp
 from routes.conducteur import conducteur_bp
 from routes.admin import admin_bp
 from routes.profil import profil_bp
+from routes.wallet import wallet_bp
 
 app = flask.Flask(__name__)
 app.secret_key = 'uniride_secret_key_2026'
@@ -23,6 +24,7 @@ app.register_blueprint(reservation_bp)
 app.register_blueprint(conducteur_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(profil_bp)
+app.register_blueprint(wallet_bp)
 
 @app.route("/")
 def home():
@@ -77,6 +79,10 @@ def mes_reservations_page():
 @app.route("/admin-page")
 def admin_page():
     return flask.render_template("admin.html")
+
+@app.route("/wallet-page")
+def wallet_page():
+    return flask.render_template("wallet.html")
 
 
 if __name__ == "__main__":

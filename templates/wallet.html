@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Mon Wallet</h2>
+
+<div class="wallet-layout">
+
+    <!-- ===== GAUCHE ===== -->
+    <div class="wallet-left">
+
+        <!-- ===== SOLDE ===== -->
+        <div class="card">
+            <h3>Solde actuel</h3>
+            <h1 id="solde">0$</h1>
+
+            <div class="wallet-actions">
+                <button class="btn" onclick="toggleSection('depot-section')">
+                    Ajouter de l'argent
+                </button>
+                <button class="btn secondary" onclick="toggleSection('retrait-section')">
+                    Retirer de l'argent
+                </button>
+            </div>
+
+            <!-- ===== DEPOT (CACHE PAR DEFAUT) ===== -->
+            <div id="depot-section" class="wallet-form hidden">
+                <h4>Ajouter de l'argent</h4>
+
+                <select id="carte-credit-select">
+                    <option value="">Choisir une carte crédit</option>
+                </select>
+                <span class="error" id="error-credit"></span>
+
+                <input type="number" id="montant-depot" placeholder="Montant">
+                <span class="error" id="error-montant-depot"></span>
+
+                <button class="btn" onclick="depot()">
+                    Confirmer le dépôt
+                </button>
+            </div>
+
+            <!-- ===== RETRAIT (CACHE PAR DEFAUT) ===== -->
+            <div id="retrait-section" class="wallet-form hidden">
+                <h4>Retirer de l'argent</h4>
+
+                <select id="carte-debit-select">
+                    <option value="">Choisir une carte débit</option>
+                </select>
+                <span class="error" id="error-debit"></span>
+
+                <input type="number" id="montant-retrait" placeholder="Montant">
+                <span class="error" id="error-montant-retrait"></span>
+
+                <button class="btn secondary" onclick="retrait()">
+                    Confirmer le retrait
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== TRANSACTIONS ===== -->
+        <div class="card">
+            <div class="top-bar">
+                <h3>Transactions</h3>
+                <button onclick="toggleTransactions()">Afficher / Masquer</button>
+            </div>
+
+            <div id="transactions"></div>
+        </div>
+
+    </div>
+
+    <!-- ===== DROITE ===== -->
+    <div class="wallet-right">
+
+        <div class="card">
+
+            <!-- HEADER -->
+            <div class="top-bar">
+                <h3>Mes cartes</h3>
+                <button onclick="toggleCartes()">Voir / Gérer</button>
+            </div>
+
+            <!-- LISTE CARTES -->
+            <div id="cartes-liste"></div>
+            <p id="no-cartes-msg"></p>
+
+            <!-- GESTION (CACHE PAR DEFAUT) -->
+            <div id="gestion-cartes" class="hidden">
+
+                <div class="wallet-actions">
+                    <button class="btn" onclick="toggleForm('add-credit')">
+                        + Carte crédit
+                    </button>
+                    <button class="btn secondary" onclick="toggleForm('add-debit')">
+                        + Carte débit
+                    </button>
+                </div>
+
+                <!-- ===== FORM CREDIT ===== -->
+                <div id="add-credit" class="wallet-form hidden">
+                    <h4>Ajouter une carte de crédit</h4>
+
+                    <input id="cc-numero" placeholder="Numéro carte (16 chiffres)">
+                    <span class="error" id="error-cc-numero"></span>
+
+                    <input id="cc-nom" placeholder="Titulaire">
+                    <input id="cc-exp" placeholder="MM/YY">
+
+                    <select id="cc-type">
+                        <option value="visa">Visa</option>
+                        <option value="mastercard">Mastercard</option>
+                    </select>
+
+                    <button class="btn" onclick="ajouterCarteCredit()">
+                        Ajouter carte crédit
+                    </button>
+                </div>
+
+                <!-- ===== FORM DEBIT ===== -->
+                <div id="add-debit" class="wallet-form hidden">
+                    <h4>Ajouter une carte de débit</h4>
+
+                    <input id="cd-compte" placeholder="Numéro compte">
+                    <input id="cd-transit" placeholder="Transit (5 chiffres)">
+                    <input id="cd-institution" placeholder="Institution (3 chiffres)">
+
+                    <button class="btn secondary" onclick="ajouterCarteDebit()">
+                        Ajouter carte débit
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/wallet.js') }}"></script>
+
+{% endblock %}

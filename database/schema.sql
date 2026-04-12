@@ -252,7 +252,34 @@ CREATE TABLE ReponsePlainte (
     FOREIGN KEY (id_plainte) REFERENCES Plainte(id_plainte),
     FOREIGN KEY (id_admin) REFERENCES Utilisateur(id_utilisateur)
 );
+-- =============================
+-- CARTE DE CRÉDIT
+-- =============================
+CREATE TABLE IF NOT EXISTS CarteCredit (
+    id_carte_credit INT AUTO_INCREMENT PRIMARY KEY,
+    id_utilisateur INT,
+    titulaire VARCHAR(100),
+    numero_carte VARCHAR(20),
+    date_expiration VARCHAR(7),
+    date_ajout TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_utilisateur) REFERENCES Utilisateur(id_utilisateur)
+);
+
+-- =============================
+-- CARTE DE DÉBIT (infos bancaires)
+-- =============================
+CREATE TABLE IF NOT EXISTS CarteDebit (
+    id_carte_debit INT AUTO_INCREMENT PRIMARY KEY,
+    id_utilisateur INT,
+    titulaire VARCHAR(100),
+    numero_compte VARCHAR(30),
+    numero_transit VARCHAR(10),
+    institution VARCHAR(10),
+    date_ajout TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_utilisateur) REFERENCES Utilisateur(id_utilisateur)
+);
 
 ALTER TABLE Utilisateur
 ADD COLUMN bio TEXT;
 DESCRIBE Utilisateur;
+

@@ -15,6 +15,7 @@ VALUES
 ('admin1', 'scrypt:hash', 'admin@gmail.com', '+15140000007', 'admin');
 
 
+
 INSERT INTO Ville (nom_ville, province)
 VALUES
 ('Montreal', 'QC'),
@@ -69,7 +70,7 @@ VALUES
 ('Saint John', 'NB'),
 ('Charlottetown', 'PE');
 
-DELETE FROM Wallet;
+
 
 INSERT INTO Wallet (id_utilisateur, solde_argent, solde_points)
 VALUES
@@ -83,7 +84,8 @@ VALUES
 
 INSERT INTO Vehicule (id_utilisateur, modele, type_vehicule, plaque_immatriculation)
 VALUES
-(1, 'Toyota Corolla', 'berline', 'ABC123');
+(3, 'Toyota Corolla', 'berline', 'ABC123'),
+(4, 'Honda Civic', 'berline', 'XYZ789');
 
 INSERT INTO Trajet (
     id_conducteur,
@@ -115,19 +117,6 @@ INSERT INTO Paiement (id_reservation, montant_argent, mode_paiement)
 VALUES
 (1, 25.00, 'argent');
 
-ALTER TABLE Trajet ADD COLUMN vehicule VARCHAR(100) NOT NULL;
-
-UPDATE Trajet SET vehicule = 'Toyota Corolla' WHERE id_trajet IN (1, 3);
-UPDATE Trajet SET vehicule = 'Honda Civic' WHERE id_trajet IN (2, 4);
-
-SHOW CREATE TABLE Trajet;
-USE uniride;
-
-ALTER TABLE Trajet DROP FOREIGN KEY trajet_ibfk_4;
-ALTER TABLE Trajet DROP COLUMN id_vehicule;
-
-SHOW CREATE TABLE Trajet;
-DESCRIBE Trajet;
 
 -- =========================
 -- DEMANDES DE CERTIFICATION
@@ -272,4 +261,3 @@ VALUES
 (3, 3, 'Oui, une valise cabine sans problème.');
 
 
-ALTER TABLE Utilisateur ADD bio TEXT;
