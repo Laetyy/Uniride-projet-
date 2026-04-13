@@ -26,6 +26,91 @@ function toggleForm(id) {
 }
 
 // =============================
+// 🎯 FORMAT DATE
+function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("fr-CA") + " à " +
+        d.toLocaleTimeString("fr-CA", {hour: '2-digit', minute:'2-digit'});
+}
+
+// =============================
+// 🎯 NOUVEAU DESIGN TRANSACTIONS
+function afficherTransactions(transactions) {
+    const container = document.getElementById("transactions");
+
+    if (!transactions || transactions.length === 0) {
+        container.innerHTML = "<p>Aucune transaction</p>";
+        return;
+    }
+
+    let retraits = [];
+    let paiements = [];
+    let receptions = [];
+
+    transactions.forEach(t => {
+        if (t.type_operation === "retrait") {
+            retraits.push(t);
+        } else if (t.type_operation === "paiement") {
+            paiements.push(t);
+        } else {
+            receptions.push(t); // depot + reception
+        }
+    });
+
+    function renderSection(title, list, type) {
+        if (list.length === 0) return "";
+
+        return `
+            <div class="transaction-section">
+                <h3>${title}</h3>
+
+                ${list.map(t => {
+
+                    let color = "";
+                    let sign = "";
+
+                    if (type === "retrait") {
+                        color = "red";
+                        sign = "-";
+                    } else if (type === "paiement") {
+                        color = "orange";
+                        sign = "-";
+                    } else {
+                        color = "green";
+                        sign = "+";
+                    }
+
+                    return `
+                        <div class="transaction-card">
+
+                            <div class="transaction-left">
+                                <span class="dot ${color}"></span>
+
+                                <div>
+                                    <strong>${title.slice(0, -1)}</strong>
+                                    <p>${t.description || "Transaction"}</p>
+                                    <small>${formatDate(t.date_operation)}</small>
+                                </div>
+                            </div>
+
+                            <div class="transaction-right ${color}">
+                                ${sign}${parseFloat(t.montant_argent).toFixed(2)}$
+                            </div>
+
+                        </div>
+                    `;
+                }).join("")}
+            </div>
+        `;
+    }
+
+    container.innerHTML =
+        renderSection("Retraits", retraits, "retrait") +
+        renderSection("Paiements", paiements, "paiement") +
+        renderSection("Réceptions", receptions, "reception");
+}
+
+// =============================
 async function chargerWallet() {
     const res = await fetch(`/wallet/${user.id_utilisateur}`);
     const data = await res.json();
@@ -45,7 +130,6 @@ async function chargerWallet() {
     selectCredit.innerHTML = "<option value=''>Choisir carte crédit</option>";
     selectDebit.innerHTML = "<option value=''>Choisir carte débit</option>";
 
-    // ===== MESSAGE SI VIDE =====
     if (data.cartes_credit.length === 0 && data.cartes_debit.length === 0) {
         msg.textContent = "Aucune carte enregistrée pour le moment";
     } else {
@@ -53,101 +137,72 @@ async function chargerWallet() {
     }
 
     // ===== CARTES CREDIT =====
-data.cartes_credit.forEach(c => {
-    if (!c.numero_carte) return;
+    data.cartes_credit.forEach(c => {
+        if (!c.numero_carte) return;
 
-    liste.innerHTML += `
-<div class="carte-premium credit">
+        liste.innerHTML += `
+        <div class="carte-premium credit">
+            <div class="card-bg"></div>
 
-    <div class="card-bg"></div>
+            <button class="delete-btn" onclick="supprimerCarteCredit(${c.id})">✕</button>
 
-    <!-- DELETE -->
-    <button class="delete-btn" onclick="supprimerCarteCredit(${c.id})">✕</button>
-
-    <!-- HEADER -->
-    <div class="carte-header">
-        <div class="chip"></div>
-
-        <div class="card-type">VISA</div>
-    </div>
-
-    <!-- NUMERO -->
-    <div class="carte-number">
-        •••• •••• •••• ${c.numero_carte.slice(-4)}
-    </div>
-
-    <!-- FOOTER -->
-    <div class="carte-footer">
-        <div class="card-holder">${c.titulaire.toUpperCase()}</div>
-    </div>
-
-</div>
-`;
-
-    selectCredit.innerHTML += `
-        <option value="${c.id}">
-            **** ${c.numero_carte.slice(-4)}
-        </option>
-    `;
-});
-
-// ===== CARTES DEBIT =====
-data.cartes_debit.forEach(c => {
-    if (!c.numero_compte) return;
-
-    liste.innerHTML += `
-<div class="carte-premium debit">
-
-    <div class="card-bg"></div>
-
-    <!-- DELETE -->
-    <button class="delete-btn" onclick="supprimerCarteDebit(${c.id})">✕</button>
-
-    <!-- HEADER -->
-    <div class="carte-header">
-        <div class="bank-name">DEBIT</div>
-    </div>
-
-    <!-- CHIP -->
-    <div class="chip"></div>
-
-    <!-- NUMERO -->
-    <div class="carte-number">
-        •••• •••• •••• ${c.numero_compte.slice(-4)}
-    </div>
-
-    <!-- FOOTER -->
-    <div class="carte-footer">
-        <div class="card-holder">${c.titulaire.toUpperCase()}</div>
-    </div>
-
-</div>
-`;
-
-    selectDebit.innerHTML += `
-        <option value="${c.id}">
-            **** ${c.numero_compte.slice(-4)}
-        </option>
-    `;
-});
-
-    // ===== TRANSACTIONS =====
-    const transDiv = document.getElementById("transactions");
-    transDiv.innerHTML = "";
-
-    data.transactions.forEach(t => {
-        const color = (t.type_operation === "depot" || t.type_operation === "reception")
-            ? "green"
-            : "red";
-
-        transDiv.innerHTML += `
-            <div class="transaction" style="color:${color}">
-                <strong>${t.type_operation.toUpperCase()}</strong> 
-                - ${t.montant_argent}$<br>
-                <small>${t.description || ""} | ${t.date_operation}</small>
+            <div class="carte-header">
+                <div class="chip"></div>
+                <div class="card-type">VISA</div>
             </div>
+
+            <div class="carte-number">
+                •••• •••• •••• ${c.numero_carte.slice(-4)}
+            </div>
+
+            <div class="carte-footer">
+                <div class="card-holder">${c.titulaire.toUpperCase()}</div>
+            </div>
+        </div>
+        `;
+
+        selectCredit.innerHTML += `
+            <option value="${c.id}">
+                **** ${c.numero_carte.slice(-4)}
+            </option>
         `;
     });
+
+    // ===== CARTES DEBIT =====
+    data.cartes_debit.forEach(c => {
+        if (!c.numero_compte) return;
+
+        liste.innerHTML += `
+        <div class="carte-premium debit">
+            <div class="card-bg"></div>
+
+            <button class="delete-btn" onclick="supprimerCarteDebit(${c.id})">✕</button>
+
+            <div class="carte-header">
+                <div class="bank-name">DEBIT</div>
+            </div>
+
+            <div class="chip"></div>
+
+            <div class="carte-number">
+                •••• •••• •••• ${c.numero_compte.slice(-4)}
+            </div>
+
+            <div class="carte-footer">
+                <div class="card-holder">${c.titulaire.toUpperCase()}</div>
+            </div>
+        </div>
+        `;
+
+        selectDebit.innerHTML += `
+            <option value="${c.id}">
+                **** ${c.numero_compte.slice(-4)}
+            </option>
+        `;
+    });
+
+    // ===== TRANSACTIONS (NEW UI) =====
+    afficherTransactions(data.transactions);
 }
 
 // =============================
@@ -206,9 +261,7 @@ function ajouterCarteCredit() {
             titulaire,
             expiration: exp
         })
-    }).then(() => {
-        chargerWallet();
-    });
+    }).then(() => chargerWallet());
 }
 
 // =============================
@@ -232,9 +285,7 @@ function ajouterCarteDebit() {
             transit,
             institution
         })
-    }).then(() => {
-        chargerWallet();
-    });
+    }).then(() => chargerWallet());
 }
 
 // =============================
@@ -243,29 +294,19 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =============================
-// SUPPRIMER CARTE CREDIT
 function supprimerCarteCredit(id) {
     if (!confirm("Supprimer cette carte ?")) return;
 
     fetch(`/wallet/supprimer-carte-credit/${id}`, {
         method: "DELETE"
-    })
-    .then(res => res.json())
-    .then(() => {
-        chargerWallet();
-    });
+    }).then(() => chargerWallet());
 }
 
 // =============================
-// SUPPRIMER CARTE DEBIT
 function supprimerCarteDebit(id) {
     if (!confirm("Supprimer cette carte ?")) return;
 
     fetch(`/wallet/supprimer-carte-debit/${id}`, {
         method: "DELETE"
-    })
-    .then(res => res.json())
-    .then(() => {
-        chargerWallet();
-    });
+    }).then(() => chargerWallet());
 }

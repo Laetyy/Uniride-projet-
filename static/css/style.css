@@ -1361,3 +1361,85 @@ textarea:focus {
 #help-floating-btn:hover {
     background: #163172;
 }
+
+/* ===== STRUCTURE ===== */
+.transaction-section {
+    margin-bottom: 20px;
+}
+
+.transaction-section h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+/* ===== CARD ===== */
+.transaction-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* ===== LEFT ===== */
+.transaction-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.transaction-left strong {
+    font-size: 15px;
+}
+
+.transaction-left p {
+    margin: 2px 0;
+    color: #555;
+    font-size: 14px;
+}
+
+.transaction-left small {
+    color: #888;
+    font-size: 12px;
+}
+
+/* ===== RIGHT (MONTANT) ===== */
+.transaction-right {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* ===== COLORS ===== */
+.red {
+    color: #e53935;
+}
+
+.green {
+    color: #2e7d32;
+}
+
+.orange {
+    color: #fb8c00;
+}
+
+/* ===== DOT ===== */
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dot.red {
+    background: #e53935;
+}
+
+.dot.green {
+    background: #2e7d32;
+}
+
+.dot.orange {
+    background: #fb8c00;
+}
