@@ -76,6 +76,7 @@ def register():
     try:
         connection = get_connection()
         cursor = connection.cursor()
+        connection.begin()
 
         mot_de_passe_hash = generate_password_hash(mot_de_passe)
 
@@ -91,14 +92,26 @@ def register():
             VALUES (%s, %s, %s, %s, %s, %s)
         """, (nom_utilisateur, mot_de_passe_hash, nom, prenom, email, telephone))
 
+        id_utilisateur = cursor.lastrowid
+
+        # Création automatique du wallet pour chaque nouveau compte
+        cursor.execute("""
+            INSERT INTO Wallet (id_utilisateur, solde_argent, solde_points)
+            VALUES (%s, 0.00, 0)
+        """, (id_utilisateur,))
+
         connection.commit()
 
         return jsonify({"message": "Compte créé avec succès"}), 201
 
     except pymysql.err.IntegrityError:
+        if connection:
+            connection.rollback()
         return jsonify({"error": "Nom d'utilisateur, email ou téléphone déjà utilisé"}), 409
 
     except Exception as e:
+        if connection:
+            connection.rollback()
         return jsonify({"error": str(e)}), 500
 
     finally:
