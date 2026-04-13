@@ -48,7 +48,7 @@
                     <div class="stat-label">Solde wallet</div>
                 </div>
             </div>
-             <!-- 🔥 BOUTON WALLET AJOUTÉ ICI -->
+
             <div class="home-actions" style="margin-top: 15px;">
                 <a class="btn" href="/wallet-page" style="width:100%;">
                     💳 Gérer mon Wallet
@@ -166,6 +166,8 @@ async function chargerProfil() {
         const photoPreview = document.getElementById("photo-preview");
         if (data.photo_profil) {
             photoPreview.src = `/static/${data.photo_profil}`;
+        } else {
+            photoPreview.src = "/static/uploads/default-profile.png";
         }
 
     } catch (error) {
@@ -181,6 +183,8 @@ async function chargerStatsProfil() {
 
         if (reservationsResponse.ok && Array.isArray(reservations)) {
             document.getElementById("rides-taken").textContent = reservations.length;
+        } else {
+            document.getElementById("rides-taken").textContent = "0";
         }
 
         const trajetsResponse = await fetch(`/conducteur/trajets/${user.id_utilisateur}`);
@@ -188,9 +192,23 @@ async function chargerStatsProfil() {
 
         if (trajetsResponse.ok && Array.isArray(trajets)) {
             document.getElementById("trips-posted").textContent = trajets.length;
+        } else {
+            document.getElementById("trips-posted").textContent = "0";
         }
+
+        const walletResponse = await fetch(`/wallet/${user.id_utilisateur}`);
+        const walletData = await walletResponse.json();
+
+        if (walletResponse.ok && walletData.wallet) {
+            document.getElementById("wallet-balance").textContent =
+                `${parseFloat(walletData.wallet.solde_argent || 0).toFixed(2)}$`;
+        } else {
+            document.getElementById("wallet-balance").textContent = "0$";
+        }
+
     } catch (error) {
         console.error(error);
+        document.getElementById("wallet-balance").textContent = "0$";
     }
 }
 
@@ -318,9 +336,11 @@ document.getElementById("save-profile-btn").addEventListener("click", async func
             user.prenom = result.user.prenom;
             user.email = result.user.email;
             user.telephone = result.user.telephone;
+            user.bio = result.user.bio;
             localStorage.setItem("user", JSON.stringify(user));
             alert("✅ Profil mis à jour");
             chargerProfil();
+            chargerStatsProfil();
             chargerAvisConducteurSiBesoin();
         } else {
             alert("❌ " + (result.error || "Erreur"));
