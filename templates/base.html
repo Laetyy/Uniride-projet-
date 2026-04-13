@@ -7,12 +7,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+
     <nav class="navbar">
         <h1>🚗 UNIRIDE</h1>
 
         <div class="nav-links">
             <a href="/home">Accueil</a>
-
             <a href="/trajets-page" class="nav-connected">Trouver un trajet</a>
             <a href="/conducteur-page" class="nav-connected">Publier un trajet</a>
             <a href="/mes-reservations-page" class="nav-connected">Mes réservations</a>
@@ -29,6 +29,21 @@
     <div class="container">
         {% block content %}{% endblock %}
     </div>
+
+    <div id="help-box" class="hidden help-overlay">
+        <div class="help-content">
+            <h3>💡 Besoin d’aide ?</h3>
+
+            <div id="contact-info" style="display:none;">
+                <p>📞 +1800 800 8080</p>
+                <p>📧 support@uniride.ca</p>
+            </div>
+            <button class="btn" onclick="showContact()">Contacter le support</button>
+            <button class="btn secondary" onclick="closeHelp()">Fermer</button>
+        </div>
+    </div>
+    
+    <button id="help-floating-btn" onclick="openHelp()">?</button>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -58,43 +73,24 @@
                 const adminLinks = document.querySelectorAll(".nav-admin");
 
                 if (user) {
-                    connectedLinks.forEach(link => {
-                        link.style.display = "inline-block";
-                    });
-
-                    disconnectedLinks.forEach(link => {
-                        link.style.display = "none";
-                    });
+                    connectedLinks.forEach(link => link.style.display = "inline-block");
+                    disconnectedLinks.forEach(link => link.style.display = "none");
 
                     if (user.role === "admin") {
-                        adminLinks.forEach(link => {
-                            link.style.display = "inline-block";
-                        });
+                        adminLinks.forEach(link => link.style.display = "inline-block");
                     } else {
-                        adminLinks.forEach(link => {
-                            link.style.display = "none";
-                        });
+                        adminLinks.forEach(link => link.style.display = "none");
                     }
                 } else {
-                    connectedLinks.forEach(link => {
-                        link.style.display = "none";
-                    });
-
-                    disconnectedLinks.forEach(link => {
-                        link.style.display = "inline-block";
-                    });
-
-                    adminLinks.forEach(link => {
-                        link.style.display = "none";
-                    });
+                    connectedLinks.forEach(link => link.style.display = "none");
+                    disconnectedLinks.forEach(link => link.style.display = "inline-block");
+                    adminLinks.forEach(link => link.style.display = "none");
                 }
             }
 
             async function logout() {
                 try {
-                    await fetch("/logout", {
-                        method: "POST"
-                    });
+                    await fetch("/logout", { method: "POST" });
                 } catch (error) {
                     console.error("Erreur logout :", error);
                 }
@@ -116,6 +112,16 @@
                 updateNavbar(user);
             });
         });
+        function openHelp() {
+            document.getElementById("help-box").classList.add("active");
+        }
+        function closeHelp() {
+            document.getElementById("help-box").classList.remove("active");
+            document.getElementById("contact-info").style.display = "none";
+        }
+        function showContact() {
+            document.getElementById("contact-info").style.display = "block";
+        }
     </script>
 </body>
 </html>
