@@ -19,3 +19,4 @@ def get_connection():
 ADMIN_USERNAME = "admin"
 ADMIN_EMAIL = "admin@uniride.ca"
 ADMIN_PASSWORD = "AdminUniRide2026!"
+

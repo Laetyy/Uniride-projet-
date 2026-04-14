@@ -248,6 +248,7 @@ def reservations_conducteur(id_conducteur):
             SELECT
                 r.id_reservation,
                 u.nom_utilisateur AS passager,
+                u.id_utilisateur AS id_passager,
                 t.id_trajet,
                 t.date_trajet,
                 t.heure_trajet,
@@ -255,13 +256,39 @@ def reservations_conducteur(id_conducteur):
                 vd.nom_ville AS depart,
                 va.nom_ville AS arrivee,
                 r.nb_places,
-                r.statut
+                r.statut,
+                c.id_conversation,
+                COALESCE(SUM(
+                    CASE
+                        WHEN m.id_expediteur = r.id_passager AND m.lu = FALSE THEN 1
+                        ELSE 0
+                    END
+                ), 0) AS messages_non_lus
             FROM Reservation r
             JOIN Trajet t ON r.id_trajet = t.id_trajet
             JOIN Utilisateur u ON r.id_passager = u.id_utilisateur
             JOIN Ville vd ON t.id_ville_depart = vd.id_ville
             JOIN Ville va ON t.id_ville_arrivee = va.id_ville
+            LEFT JOIN Conversation c
+                ON c.id_trajet = t.id_trajet
+               AND c.id_passager = r.id_passager
+               AND c.id_conducteur = t.id_conducteur
+            LEFT JOIN Message m
+                ON m.id_conversation = c.id_conversation
             WHERE t.id_conducteur = %s
+            GROUP BY
+                r.id_reservation,
+                u.nom_utilisateur,
+                u.id_utilisateur,
+                t.id_trajet,
+                t.date_trajet,
+                t.heure_trajet,
+                t.statut,
+                vd.nom_ville,
+                va.nom_ville,
+                r.nb_places,
+                r.statut,
+                c.id_conversation
             ORDER BY r.date_reservation DESC
         """, (id_conducteur,))
 
@@ -272,6 +299,7 @@ def reservations_conducteur(id_conducteur):
                 reservation["date_trajet"] = str(reservation["date_trajet"])
             if reservation.get("heure_trajet"):
                 reservation["heure_trajet"] = str(reservation["heure_trajet"])
+            reservation["messages_non_lus"] = int(reservation.get("messages_non_lus", 0))
 
         return jsonify(reservations), 200
 

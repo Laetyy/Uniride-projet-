@@ -192,3 +192,6 @@ VALUES
 (3, 6, 'Salut, est-ce que vous pouvez attendre 10 minutes si jamais je suis en retard ?'),
 (3, 1, 'Oui, mais prévenez-moi à l’avance.');
 
+
+
+

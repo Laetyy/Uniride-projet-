@@ -286,6 +286,8 @@ CREATE TABLE Message (
     FOREIGN KEY (id_conversation) REFERENCES Conversation(id_conversation),
     FOREIGN KEY (id_expediteur) REFERENCES Utilisateur(id_utilisateur)
 );
+ALTER TABLE Message
+ADD COLUMN lu BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE TABLE QuestionAide (
     id_question INT AUTO_INCREMENT PRIMARY KEY,

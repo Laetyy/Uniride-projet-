@@ -4,10 +4,10 @@
 
 <h2>💬 Conversation</h2>
 
-<div id="chat-box" style="background:white; padding:15px; border-radius:10px; min-height:300px;"></div>
+<div id="chat-box" class="chat-box"></div>
 
-<div style="margin-top:10px;">
-    <input type="text" id="message-input" placeholder="Écrire un message..." style="width:70%;">
+<div class="chat-input-row">
+    <input type="text" id="message-input" placeholder="Écrire un message...">
     <button class="btn" onclick="envoyerMessage()">Envoyer</button>
 </div>
 
@@ -17,33 +17,83 @@ const urlParams = new URLSearchParams(window.location.search);
 const trajetId = urlParams.get("trajet");
 
 let conversationId = null;
+let refreshInterval = null;
 
 async function chargerConversation() {
     const res = await fetch(`/conversation/${trajetId}`);
     const data = await res.json();
 
+    if (!res.ok) {
+        alert(data.error || "Erreur conversation");
+        return;
+    }
+
     conversationId = data.id_conversation;
-    chargerMessages();
+}
+
+async function marquerCommeLu() {
+    if (!conversationId || !user) return;
+
+    try {
+        const res = await fetch(`/messages/${conversationId}/read`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id_utilisateur: user.id_utilisateur
+            })
+        });
+
+        const data = await res.json();
+        console.log("read status:", res.status, data);
+
+        if (!res.ok) {
+            console.error("Erreur marquage lu");
+        }
+    } catch (error) {
+        console.error("Erreur marquage lu :", error);
+    }
 }
 
 async function chargerMessages() {
-    const res = await fetch(`/messages/${conversationId}`);
+    if (!conversationId) return;
+
+    const res = await fetch(`/messages/${conversationId}`, {
+        cache: "no-store"
+    });
     const messages = await res.json();
+
+    if (!res.ok) {
+        console.error(messages.error || "Erreur chargement messages");
+        return;
+    }
 
     const box = document.getElementById("chat-box");
     box.innerHTML = "";
 
     messages.forEach(m => {
+        const isMine = Number(m.id_expediteur) === Number(user.id_utilisateur);
+
         box.innerHTML += `
-            <p><strong>${m.auteur}:</strong> ${m.contenu}</p>
+            <div class="message-row ${isMine ? 'mine' : 'theirs'}">
+                <div class="message-bubble">
+                    <div class="message-author">${m.auteur}</div>
+                    <div>${m.contenu}</div>
+                    ${isMine ? `<div class="message-status">${m.lu ? "Lu" : "Envoyé"}</div>` : ""}
+                </div>
+            </div>
         `;
     });
+
+    box.scrollTop = box.scrollHeight;
 }
 
 async function envoyerMessage() {
-    const contenu = document.getElementById("message-input").value;
+    const input = document.getElementById("message-input");
+    const contenu = input.value.trim();
 
-    await fetch("/message", {
+    if (!contenu) return;
+
+    const res = await fetch("/message", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -53,14 +103,46 @@ async function envoyerMessage() {
         })
     });
 
-    document.getElementById("message-input").value = "";
-    chargerMessages();
+    const data = await res.json();
+
+    if (!res.ok) {
+        alert(data.error || "Erreur envoi message");
+        return;
+    }
+
+    input.value = "";
+    await chargerMessages();
+}
+
+document.getElementById("message-input").addEventListener("keypress", async function(e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        await envoyerMessage();
+    }
+});
+
+async function refreshChat() {
+    await marquerCommeLu();
+    await chargerMessages();
 }
 
 async function initChat() {
     await chargerConversation();
-    chargerMessages();
+    console.log("conversationId =", conversationId);
+    console.log("user =", user);
+
+    await marquerCommeLu();
+    await chargerMessages();
+
+    refreshInterval = setInterval(async () => {
+        await marquerCommeLu();
+        await chargerMessages();
+    }, 3000);
 }
+
+window.addEventListener("beforeunload", () => {
+    if (refreshInterval) clearInterval(refreshInterval);
+});
 
 initChat();
 </script>

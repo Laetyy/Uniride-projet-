@@ -60,6 +60,10 @@ async function chargerReservations() {
             const card = document.createElement("div");
             card.className = "trajet-card";
 
+            const badgeHtml = Number(reservation.messages_non_lus || 0) > 0
+                ? `<span class="message-badge">${reservation.messages_non_lus}</span>`
+                : "";
+
             card.innerHTML = `
                 <h4>${reservation.ville_depart} → ${reservation.ville_arrivee}</h4>
                 <p><strong>Conducteur :</strong> ${reservation.conducteur}</p>
@@ -71,7 +75,10 @@ async function chargerReservations() {
                 <p><strong>Statut trajet :</strong> ${reservation.statut_trajet}</p>
                 <p><strong>Date de réservation :</strong> ${reservation.date_reservation}</p>
                 <div class="home-actions">
-                    <button class="btn" onclick="ouvrirChat(${reservation.id_trajet})">💬 Contacter</button>
+                    <button class="btn message-btn" onclick="ouvrirChat(${reservation.id_trajet})">
+                        💬 Contacter
+                        ${badgeHtml}
+                    </button>
                     <button class="btn danger" onclick="annulerReservation(${reservation.id_reservation})">❌ Annuler</button>
                 </div>
             `;
@@ -186,8 +193,16 @@ async function laisserAvis(id_trajet) {
         alert("Erreur serveur");
     }
 }
+
 function ouvrirChat(id_trajet) {
     window.location.href = `/conversation-page?trajet=${id_trajet}`;
 }
+window.addEventListener("pageshow", function () {
+    if (user) {
+        setTimeout(() => {
+            chargerReservations();
+        }, 300);
+    }
+});
 </script>
 {% endblock %}

@@ -571,6 +571,10 @@ async function chargerReservationsConducteur() {
             const card = document.createElement("div");
             card.className = "trajet-card";
 
+            const badgeHtml = Number(reservation.messages_non_lus || 0) > 0
+                ? `<span class="message-badge">${reservation.messages_non_lus}</span>`
+                : "";
+
             card.innerHTML = `
                 <h4>${reservation.depart} → ${reservation.arrivee}</h4>
                 <p><strong>Passager :</strong> ${reservation.passager}</p>
@@ -580,8 +584,9 @@ async function chargerReservationsConducteur() {
                 <p><strong>Statut réservation :</strong> ${reservation.statut}</p>
                 <p><strong>Statut trajet :</strong> ${reservation.statut_trajet}</p>
                 <div class="home-actions">
-                    <button class="btn" onclick="ouvrirChat(${reservation.id_trajet})">
+                    <button class="btn message-btn" onclick="ouvrirChat(${reservation.id_trajet})">
                         💬 Contacter
+                        ${badgeHtml}
                     </button>
                 </div>
             `;
@@ -627,10 +632,16 @@ async function initConducteurPage() {
     }
 }
 
-initConducteurPage();
-
 function ouvrirChat(id_trajet) {
     window.location.href = `/conversation-page?trajet=${id_trajet}`;
 }
+window.addEventListener("pageshow", function () {
+    if (user) {
+        setTimeout(() => {
+            chargerReservationsConducteur();
+        }, 300);
+    }
+});
+initConducteurPage();
 </script>
 {% endblock %}

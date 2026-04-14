@@ -121,7 +121,15 @@ def get_reservations_passager(id_passager):
                 vd.nom_ville AS ville_depart,
                 va.nom_ville AS ville_arrivee,
                 u.nom_utilisateur AS conducteur,
-                e.id_evaluation AS deja_note
+                t.id_conducteur,
+                e.id_evaluation AS deja_note,
+                c.id_conversation,
+                COALESCE(SUM(
+                    CASE
+                        WHEN m.id_expediteur = t.id_conducteur AND m.lu = FALSE THEN 1
+                        ELSE 0
+                    END
+                ), 0) AS messages_non_lus
             FROM Reservation r
             JOIN Trajet t ON r.id_trajet = t.id_trajet
             JOIN Ville vd ON t.id_ville_depart = vd.id_ville
@@ -130,7 +138,29 @@ def get_reservations_passager(id_passager):
             LEFT JOIN Evaluation e
                 ON e.id_trajet = t.id_trajet
                AND e.id_passager = r.id_passager
+            LEFT JOIN Conversation c
+                ON c.id_trajet = t.id_trajet
+               AND c.id_passager = r.id_passager
+               AND c.id_conducteur = t.id_conducteur
+            LEFT JOIN Message m
+                ON m.id_conversation = c.id_conversation
             WHERE r.id_passager = %s
+            GROUP BY
+                r.id_reservation,
+                r.nb_places,
+                r.statut,
+                r.date_reservation,
+                t.id_trajet,
+                t.date_trajet,
+                t.heure_trajet,
+                t.prix,
+                t.statut,
+                vd.nom_ville,
+                va.nom_ville,
+                u.nom_utilisateur,
+                t.id_conducteur,
+                e.id_evaluation,
+                c.id_conversation
             ORDER BY r.date_reservation DESC
         """, (id_passager,))
 
@@ -143,7 +173,9 @@ def get_reservations_passager(id_passager):
                 reservation["date_trajet"] = str(reservation["date_trajet"])
             if reservation.get("heure_trajet"):
                 reservation["heure_trajet"] = str(reservation["heure_trajet"])
+
             reservation["deja_note"] = bool(reservation.get("deja_note"))
+            reservation["messages_non_lus"] = int(reservation.get("messages_non_lus", 0))
 
         return jsonify(reservations), 200
 
@@ -155,7 +187,6 @@ def get_reservations_passager(id_passager):
             cursor.close()
         if connection:
             connection.close()
-
 
 @reservation_bp.route("/reservation/<int:id_reservation>", methods=["DELETE"])
 def annuler_reservation(id_reservation):

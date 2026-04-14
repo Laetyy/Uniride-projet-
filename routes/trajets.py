@@ -1,7 +1,6 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 import pymysql
 from config import get_connection
-from flask import session 
 
 trajets_bp = Blueprint("trajets", __name__)
 
@@ -173,83 +172,188 @@ def create_trajet():
         if connection:
             connection.close()
 
-@trajets_bp.route("/conversation/<int:id_trajet>")
+
+@trajets_bp.route("/conversation/<int:id_trajet>", methods=["GET"])
 def get_or_create_conversation(id_trajet):
-    user = session.get("user")
+    conn = None
+    cursor = None
 
-    conn = get_connection()
-    cursor = conn.cursor()
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    # 1. vérifier si conversation existe
-    cursor.execute("""
-        SELECT id_conversation FROM Conversation
-        WHERE id_trajet = %s
-    """, (id_trajet,))
-    
-    conv = cursor.fetchone()
+        cursor.execute("""
+            SELECT id_conversation
+            FROM Conversation
+            WHERE id_trajet = %s
+            LIMIT 1
+        """, (id_trajet,))
+        conv = cursor.fetchone()
 
-    if conv:
-        return jsonify(conv)
+        if conv:
+            return jsonify(conv), 200
 
-    # 2. récupérer conducteur + passager
-    cursor.execute("""
-        SELECT t.id_conducteur, r.id_passager
-        FROM Trajet t
-        JOIN Reservation r ON r.id_trajet = t.id_trajet
-        WHERE t.id_trajet = %s
-        LIMIT 1
-    """, (id_trajet,))
-    
-    data = cursor.fetchone()
+        cursor.execute("""
+            SELECT t.id_conducteur, r.id_passager
+            FROM Trajet t
+            JOIN Reservation r ON r.id_trajet = t.id_trajet
+            WHERE t.id_trajet = %s
+            ORDER BY r.date_reservation DESC
+            LIMIT 1
+        """, (id_trajet,))
+        data = cursor.fetchone()
 
-    if not data:
-        return jsonify({"error": "Impossible de créer conversation"}), 400
+        if not data:
+            return jsonify({"error": "Impossible de créer conversation"}), 400
 
-    # 3. créer conversation
-    cursor.execute("""
-        INSERT INTO Conversation (id_trajet, id_conducteur, id_passager)
-        VALUES (%s, %s, %s)
-    """, (
-        id_trajet,
-        data["id_conducteur"],
-        data["id_passager"]
-    ))
+        cursor.execute("""
+            INSERT INTO Conversation (id_trajet, id_conducteur, id_passager)
+            VALUES (%s, %s, %s)
+        """, (
+            id_trajet,
+            data["id_conducteur"],
+            data["id_passager"]
+        ))
 
-    conn.commit()
+        conn.commit()
 
-    return jsonify({"id_conversation": cursor.lastrowid})
+        return jsonify({"id_conversation": cursor.lastrowid}), 201
 
-@trajets_bp.route("/messages/<int:id_conversation>")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+@trajets_bp.route("/messages/<int:id_conversation>", methods=["GET"])
 def get_messages(id_conversation):
-    conn = get_connection()
-    cursor = conn.cursor()
+    conn = None
+    cursor = None
 
-    cursor.execute("""
-        SELECT m.contenu, u.nom_utilisateur as auteur
-        FROM Message m
-        JOIN Utilisateur u ON m.id_expediteur = u.id_utilisateur
-        WHERE m.id_conversation = %s
-        ORDER BY m.date_envoi
-    """, (id_conversation,))
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    return jsonify(cursor.fetchall())
+        cursor.execute("""
+            SELECT
+                m.id_message,
+                m.id_expediteur,
+                m.contenu,
+                m.date_envoi,
+                m.lu,
+                u.nom_utilisateur AS auteur
+            FROM Message m
+            JOIN Utilisateur u ON m.id_expediteur = u.id_utilisateur
+            WHERE m.id_conversation = %s
+            ORDER BY m.date_envoi ASC
+        """, (id_conversation,))
+
+        messages = cursor.fetchall()
+
+        for message in messages:
+            if message.get("date_envoi"):
+                message["date_envoi"] = str(message["date_envoi"])
+            message["lu"] = bool(message.get("lu"))
+
+        return jsonify(messages), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 
 @trajets_bp.route("/message", methods=["POST"])
 def send_message():
     data = request.get_json()
 
-    conn = get_connection()
-    cursor = conn.cursor()
+    if not data:
+        return jsonify({"error": "Aucune donnée reçue"}), 400
 
-    cursor.execute("""
-        INSERT INTO Message (id_conversation, id_expediteur, contenu)
-        VALUES (%s, %s, %s)
-    """, (
-        data["id_conversation"],
-        data["id_expediteur"],
-        data["contenu"]
-    ))
+    id_conversation = data.get("id_conversation")
+    id_expediteur = data.get("id_expediteur")
+    contenu = (data.get("contenu") or "").strip()
 
-    conn.commit()
+    if not id_conversation or not id_expediteur or not contenu:
+        return jsonify({"error": "Données manquantes"}), 400
 
-    return jsonify({"ok": True})
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO Message (id_conversation, id_expediteur, contenu, lu)
+            VALUES (%s, %s, %s, FALSE)
+        """, (
+            id_conversation,
+            id_expediteur,
+            contenu
+        ))
+
+        conn.commit()
+
+        return jsonify({"ok": True}), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+@trajets_bp.route("/messages/<int:id_conversation>/read", methods=["PUT"])
+def mark_messages_as_read(id_conversation):
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Aucune donnée reçue"}), 400
+
+    id_utilisateur = data.get("id_utilisateur")
+
+    if not id_utilisateur:
+        return jsonify({"error": "id_utilisateur manquant"}), 400
+
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            UPDATE Message
+            SET lu = TRUE
+            WHERE id_conversation = %s
+              AND id_expediteur <> %s
+              AND lu = FALSE
+        """, (id_conversation, id_utilisateur))
+
+        conn.commit()
+
+        return jsonify({
+            "message": "Messages marqués comme lus",
+            "updated": cursor.rowcount
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
