@@ -16,7 +16,11 @@
             <a href="/trajets-page" class="nav-connected">Trouver un trajet</a>
             <a href="/conducteur-page" class="nav-connected">Publier un trajet</a>
             <a href="/mes-reservations-page" class="nav-connected">Mes réservations</a>
-            <a href="/profil-page" class="nav-connected">Profil</a>
+
+            <!-- 🔥 PROFIL -->
+            <a href="/profil-page" class="nav-connected nav-profil">Profil</a>
+
+            <!-- 🔥 ADMIN -->
             <a href="/admin-page" class="nav-connected nav-admin">Admin</a>
 
             <a href="/login-page" class="nav-disconnected">Connexion</a>
@@ -30,6 +34,7 @@
         {% block content %}{% endblock %}
     </div>
 
+    <!-- HELP -->
     <div id="help-box" class="hidden help-overlay">
         <div class="help-content">
             <h3>💡 Besoin d’aide ?</h3>
@@ -38,11 +43,12 @@
                 <p>📞 +1800 800 8080</p>
                 <p>📧 support@uniride.ca</p>
             </div>
+
             <button class="btn" onclick="showContact()">Contacter le support</button>
             <button class="btn secondary" onclick="closeHelp()">Fermer</button>
         </div>
     </div>
-    
+
     <button id="help-floating-btn" onclick="openHelp()">?</button>
 
     <script>
@@ -71,20 +77,32 @@
                 const connectedLinks = document.querySelectorAll(".nav-connected");
                 const disconnectedLinks = document.querySelectorAll(".nav-disconnected");
                 const adminLinks = document.querySelectorAll(".nav-admin");
+                const profilLinks = document.querySelectorAll(".nav-profil");
 
                 if (user) {
                     connectedLinks.forEach(link => link.style.display = "inline-block");
                     disconnectedLinks.forEach(link => link.style.display = "none");
 
                     if (user.role === "admin") {
+                        // ✅ admin voit admin
                         adminLinks.forEach(link => link.style.display = "inline-block");
+
+                        // ❌ admin ne voit pas profil
+                        profilLinks.forEach(link => link.style.display = "none");
+
                     } else {
+                        // ❌ user normal ne voit pas admin
                         adminLinks.forEach(link => link.style.display = "none");
+
+                        // ✅ user voit profil
+                        profilLinks.forEach(link => link.style.display = "inline-block");
                     }
+
                 } else {
                     connectedLinks.forEach(link => link.style.display = "none");
                     disconnectedLinks.forEach(link => link.style.display = "inline-block");
                     adminLinks.forEach(link => link.style.display = "none");
+                    profilLinks.forEach(link => link.style.display = "none");
                 }
             }
 
@@ -112,13 +130,16 @@
                 updateNavbar(user);
             });
         });
+
         function openHelp() {
             document.getElementById("help-box").classList.add("active");
         }
+
         function closeHelp() {
             document.getElementById("help-box").classList.remove("active");
             document.getElementById("contact-info").style.display = "none";
         }
+
         function showContact() {
             document.getElementById("contact-info").style.display = "block";
         }

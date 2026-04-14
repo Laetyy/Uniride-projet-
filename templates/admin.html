@@ -3,453 +3,359 @@
 {% block content %}
 <h2 class="admin-page-title">Administration UniRide</h2>
 
-<div class="dashboard-card">
-    <h3>Statistiques</h3>
-    <div id="admin-stats">
-        <p>Chargement des statistiques...</p>
-    </div>
+<!-- MENU -->
+<div class="admin-tabs">
+    <button onclick="showSection('stats')">Statistiques</button>
+    <button onclick="showSection('users')">Utilisateurs</button>
+    <button onclick="showSection('demandes')">Demandes</button>
+    <button onclick="showSection('trajets')">Trajets</button>
+    <button onclick="showSection('wallets')">Wallets</button>
 </div>
 
-<div class="dashboard-card">
-    <h3>Utilisateurs</h3>
-    <div id="admin-users">
-        <p>Chargement des utilisateurs...</p>
-    </div>
-</div>
-
-<div class="dashboard-card">
-    <h3>Demandes de certification</h3>
-    <div id="admin-demandes">
-        <p>Chargement des demandes...</p>
-    </div>
-</div>
-
-<div class="dashboard-card">
-    <h3>Trajets</h3>
-    <div id="admin-trajets">
-        <p>Chargement des trajets...</p>
-    </div>
-</div>
-
-<div class="dashboard-card">
-    <h3>Wallets</h3>
-    <div id="admin-wallets">
-        <p>Chargement des wallets...</p>
-    </div>
-</div>
-
-<div class="dashboard-card">
-    <h3>Plaintes</h3>
-    <div id="admin-plaintes">
-        <p>Chargement des plaintes...</p>
-    </div>
+<div class="admin-content">
+    <div id="section-stats" class="admin-section"></div>
+    <div id="section-users" class="admin-section hidden"></div>
+    <div id="section-demandes" class="admin-section hidden"></div>
+    <div id="section-trajets" class="admin-section hidden"></div>
+    <div id="section-wallets" class="admin-section hidden"></div>
 </div>
 
 <script>
+
+// =============================
+// NAVIGATION
+// =============================
+function showSection(section) {
+    document.querySelectorAll(".admin-section").forEach(sec => {
+        sec.classList.add("hidden");
+    });
+    document.getElementById("section-" + section).classList.remove("hidden");
+}
+
+// =============================
+// PROFIL UTILISATEUR
+// =============================
+function voirProfil(id_utilisateur) {
+    window.location.href = `/profil-conducteur-page?id=${id_utilisateur}`;
+}
+
+// =============================
+// SECURITE
+// =============================
 async function verifierAdmin() {
-    try {
-        const response = await fetch("/me");
-        const data = await response.json();
+    const res = await fetch("/me");
+    const data = await res.json();
 
-        if (!response.ok) {
-            window.location.href = "/login-page";
-            return false;
-        }
-
-        if (!data.user || data.user.role !== "admin") {
-            alert("Accès refusé");
-            window.location.href = "/home";
-            return false;
-        }
-
-        return true;
-    } catch (error) {
-        console.error("Erreur verifierAdmin :", error);
-        window.location.href = "/login-page";
+    if (!data.user || data.user.role !== "admin") {
+        window.location.href = "/home";
         return false;
     }
+    return true;
 }
 
+// =============================
+// STATS
+// =============================
 async function chargerStatsAdmin() {
-    const zone = document.getElementById("admin-stats");
+    const zone = document.getElementById("section-stats");
+    const res = await fetch("/admin/stats");
+    const stats = await res.json();
 
-    try {
-        const response = await fetch("/admin/stats");
-        const stats = await response.json();
-
-        if (!response.ok) {
-            zone.innerHTML = `<p>Erreur : ${stats.error || "Impossible de charger les statistiques"}</p>`;
-            return;
-        }
-
-        zone.innerHTML = `
-            <p><strong>Total utilisateurs :</strong> ${stats.total_utilisateurs}</p>
-            <p><strong>Total conducteurs :</strong> ${stats.total_conducteurs}</p>
-            <p><strong>Total trajets :</strong> ${stats.total_trajets}</p>
-            <p><strong>Total réservations :</strong> ${stats.total_reservations}</p>
-            <p><strong>Demandes en attente :</strong> ${stats.demandes_en_attente}</p>
-            <p><strong>Plaintes ouvertes :</strong> ${stats.plaintes_ouvertes}</p>
-        `;
-    } catch (error) {
-        console.error(error);
-        zone.innerHTML = "<p>Erreur chargement statistiques.</p>";
-    }
+    zone.innerHTML = `
+        <div class="dashboard-card">
+            <h3>Statistiques globales</h3>
+            <p>👤 Utilisateurs : ${stats.total_utilisateurs}</p>
+            <p>🚗 Conducteurs : ${stats.total_conducteurs}</p>
+            <p>🛣️ Trajets : ${stats.total_trajets}</p>
+            <p>📦 Réservations : ${stats.total_reservations}</p>
+            <p>⏳ Demandes en attente : ${stats.demandes_en_attente}</p>
+        </div>
+    `;
 }
 
+// =============================
+// UTILISATEURS (DETAILS + PROFIL)
+// =============================
 async function chargerUtilisateurs() {
-    const zone = document.getElementById("admin-users");
+    const zone = document.getElementById("section-users");
+    const res = await fetch("/admin/utilisateurs");
+    const users = await res.json();
 
-    try {
-        const response = await fetch("/admin/utilisateurs");
-        const utilisateurs = await response.json();
+    // 🔥 séparation
+    const actifs = users.filter(u => u.statut === "actif");
+    const suspendus = users.filter(u => u.statut === "suspendu");
 
-        if (!response.ok) {
-            zone.innerHTML = `<p>Erreur : ${utilisateurs.error || "Impossible de charger les utilisateurs"}</p>`;
+    zone.innerHTML = `
+        <div class="admin-grid-2">
+            <div>
+                <h3>🟢 Utilisateurs actifs</h3>
+                <div id="users-actifs"></div>
+            </div>
+
+            <div>
+                <h3>🔴 Utilisateurs suspendus</h3>
+                <div id="users-suspendus"></div>
+            </div>
+        </div>
+    `;
+
+    function render(list, containerId, isActif) {
+        const container = document.getElementById(containerId);
+
+        if (list.length === 0) {
+            container.innerHTML = "<p>Aucun utilisateur.</p>";
             return;
         }
 
-        if (!utilisateurs.length) {
-            zone.innerHTML = "<p>Aucun utilisateur trouvé.</p>";
-            return;
-        }
+        list.forEach(u => {
+            container.innerHTML += `
+                <div class="trajet-card">
+                    <h4>${u.nom_utilisateur}</h4>
 
-        zone.innerHTML = "";
+                    <p><strong>Email :</strong> ${u.email}</p>
+                    <p><strong>Téléphone :</strong> ${u.telephone || "Non renseigné"}</p>
+                    <p><strong>Nom :</strong> ${u.nom || ""} ${u.prenom || ""}</p>
 
-        utilisateurs.forEach(user => {
-            const card = document.createElement("div");
-            card.className = "trajet-card";
+                    <p><strong>Rôle :</strong> ${u.role}</p>
 
-            card.innerHTML = `
-                <h4>${user.nom_utilisateur}</h4>
-                <p><strong>Email :</strong> ${user.email}</p>
-                <p><strong>Téléphone :</strong> ${user.telephone || "Non renseigné"}</p>
-                <p><strong>Rôle :</strong> ${user.role}</p>
-                <p><strong>Statut :</strong> ${user.statut}</p>
-                <div class="home-actions">
-                    <button class="btn secondary" onclick="suspendreUtilisateur(${user.id_utilisateur})">Suspendre</button>
-                    <button class="btn" onclick="reactiverUtilisateur(${user.id_utilisateur})">Réactiver</button>
+                    <div class="home-actions">
+                        <button class="btn" onclick="voirProfil(${u.id_utilisateur})">
+                            👤 Profil
+                        </button>
+
+                        ${isActif ? `
+                            <button class="btn secondary" onclick="suspendreUtilisateur(${u.id_utilisateur})">
+                                Suspendre
+                            </button>
+                        ` : `
+                            <button class="btn" onclick="reactiverUtilisateur(${u.id_utilisateur})">
+                                Réactiver
+                            </button>
+                        `}
+                    </div>
                 </div>
             `;
-
-            zone.appendChild(card);
         });
-    } catch (error) {
-        console.error(error);
-        zone.innerHTML = "<p>Erreur chargement utilisateurs.</p>";
     }
-}
 
+    render(actifs, "users-actifs", true);
+    render(suspendus, "users-suspendus", false);
+}
+// =============================
+// DEMANDES
+// =============================
 async function chargerDemandes() {
-    const zone = document.getElementById("admin-demandes");
+    const zone = document.getElementById("section-demandes");
+    const res = await fetch("/admin/demandes-certification");
+    const demandes = await res.json();
 
-    try {
-        const response = await fetch("/admin/demandes-certification");
-        const demandes = await response.json();
+    // 🔥 séparation
+    const enAttente = demandes.filter(d => d.statut_demande === "en_attente");
+    const acceptees = demandes.filter(d => d.statut_demande === "acceptee");
+    const refusees = demandes.filter(d => d.statut_demande === "refusee");
 
-        if (!response.ok) {
-            zone.innerHTML = `<p>Erreur : ${demandes.error || "Impossible de charger les demandes"}</p>`;
+    zone.innerHTML = `
+        <div class="admin-grid-3">
+            <div>
+                <h3>⏳ Demandes en attente</h3>
+                <div id="attente"></div>
+            </div>
+
+            <div>
+                <h3>✅ Demandes acceptées</h3>
+                <div id="acceptees"></div>
+            </div>
+
+            <div>
+                <h3>❌ Demandes refusées</h3>
+                <div id="refusees"></div>
+            </div>
+        </div>
+    `;
+
+    function render(d, containerId, isPending) {
+        const container = document.getElementById(containerId);
+
+        if (d.length === 0) {
+            container.innerHTML = "<p>Aucune demande.</p>";
             return;
         }
 
-        if (!demandes.length) {
-            zone.innerHTML = "<p>Aucune demande de certification.</p>";
-            return;
-        }
+        d.forEach(item => {
+            container.innerHTML += `
+                <div class="trajet-card">
+                    <h4>${item.nom_utilisateur}</h4>
 
-        zone.innerHTML = "";
+                    <p><strong>Email :</strong> ${item.email}</p>
 
-        demandes.forEach(demande => {
-            const card = document.createElement("div");
-            card.className = "trajet-card";
+                    <p><strong>Permis :</strong> ${item.numero_permis}</p>
+                    <p><strong>Expiration :</strong> ${item.date_expiration_permis}</p>
 
-            card.innerHTML = `
-                <h4>${demande.nom_utilisateur}</h4>
-                <p><strong>Email :</strong> ${demande.email}</p>
-                <p><strong>Permis :</strong> ${demande.numero_permis}</p>
-                <p><strong>Expiration permis :</strong> ${demande.date_expiration_permis}</p>
-                <p><strong>Type identité :</strong> ${demande.type_identite}</p>
-                <p><strong>Numéro identité :</strong> ${demande.numero_identite}</p>
-                <p><strong>Expiration identité :</strong> ${demande.date_expiration_identite}</p>
-                <p><strong>Statut :</strong> ${demande.statut_demande}</p>
-                <p><strong>Commentaire admin :</strong> ${demande.commentaire_admin || "Aucun"}</p>
-                <div class="home-actions">
-                    <button class="btn" onclick="accepterDemande(${demande.id_demande})">Accepter</button>
-                    <button class="btn secondary" onclick="refuserDemande(${demande.id_demande})">Refuser</button>
+                    <p><strong>Identité :</strong> ${item.type_identite}</p>
+                    <p><strong>Numéro :</strong> ${item.numero_identite}</p>
+
+                    <p><strong>Statut :</strong> ${item.statut_demande}</p>
+
+                    ${item.commentaire_admin ? `
+                        <p><strong>Commentaire :</strong> ${item.commentaire_admin}</p>
+                    ` : ""}
+
+                    ${isPending ? `
+                        <div class="home-actions">
+                            <button class="btn" onclick="accepterDemande(${item.id_demande})">
+                                Accepter
+                            </button>
+                            <button class="btn secondary" onclick="refuserDemande(${item.id_demande})">
+                                Refuser
+                            </button>
+                        </div>
+                    ` : ""}
                 </div>
             `;
-
-            zone.appendChild(card);
         });
-    } catch (error) {
-        console.error(error);
-        zone.innerHTML = "<p>Erreur chargement demandes.</p>";
     }
-}
 
+    render(enAttente, "attente", true);
+    render(acceptees, "acceptees", false);
+    render(refusees, "refusees", false);
+}
+// =============================
+// TRAJETS
+// =============================
 async function chargerTrajetsAdmin() {
-    const zone = document.getElementById("admin-trajets");
+    const zone = document.getElementById("section-trajets");
+    const res = await fetch("/admin/trajets");
+    const trajets = await res.json();
 
-    try {
-        const response = await fetch("/admin/trajets");
-        const trajets = await response.json();
+    // 🔥 séparation
+    const actifs = trajets.filter(t => t.statut === "actif");
+    const termines = trajets.filter(t => t.statut === "termine");
 
-        if (!response.ok) {
-            zone.innerHTML = `<p>Erreur : ${trajets.error || "Impossible de charger les trajets"}</p>`;
+    zone.innerHTML = `
+        <div class="admin-grid-2">
+
+            <div>
+                <h3>🟢 Trajets actifs</h3>
+                <div id="trajets-actifs"></div>
+            </div>
+
+            <div>
+                <h3>⚫ Trajets terminés</h3>
+                <div id="trajets-termines"></div>
+            </div>
+
+        </div>
+    `;
+
+    function render(list, containerId) {
+        const container = document.getElementById(containerId);
+
+        if (list.length === 0) {
+            container.innerHTML = "<p>Aucun trajet.</p>";
             return;
         }
 
-        if (!trajets.length) {
-            zone.innerHTML = "<p>Aucun trajet trouvé.</p>";
-            return;
-        }
+        list.forEach(t => {
+            container.innerHTML += `
+                <div class="trajet-card">
+                    <h4>${t.ville_depart} → ${t.ville_arrivee}</h4>
 
-        zone.innerHTML = "";
+                    <p><strong>Conducteur :</strong> ${t.conducteur}</p>
 
-        trajets.forEach(trajet => {
-            const card = document.createElement("div");
-            card.className = "trajet-card";
+                    <p><strong>Date :</strong> ${t.date_trajet}</p>
+                    <p><strong>Heure :</strong> ${t.heure_trajet}</p>
 
-            card.innerHTML = `
-                <h4>${trajet.ville_depart} → ${trajet.ville_arrivee}</h4>
-                <p><strong>Conducteur :</strong> ${trajet.conducteur}</p>
-                <p><strong>Date :</strong> ${trajet.date_trajet}</p>
-                <p><strong>Heure :</strong> ${trajet.heure_trajet}</p>
-                <p><strong>Prix :</strong> ${trajet.prix}$</p>
-                <p><strong>Places :</strong> ${trajet.places_disponibles}</p>
-                <p><strong>Statut :</strong> ${trajet.statut}</p>
+                    <p><strong>Prix :</strong> ${t.prix}$</p>
+                    <p><strong>Places :</strong> ${t.places_disponibles}</p>
+
+                    <p><strong>Statut :</strong> ${t.statut}</p>
+                </div>
             `;
-
-            zone.appendChild(card);
         });
-    } catch (error) {
-        console.error(error);
-        zone.innerHTML = "<p>Erreur chargement trajets.</p>";
     }
-}
 
+    render(actifs, "trajets-actifs");
+    render(termines, "trajets-termines");
+}
+// =============================
+// WALLETS + AJUSTEMENT
+// =============================
 async function chargerWallets() {
-    const zone = document.getElementById("admin-wallets");
+    const zone = document.getElementById("section-wallets");
+    const res = await fetch("/admin/wallets");
+    const wallets = await res.json();
 
-    try {
-        const response = await fetch("/admin/wallets");
-        const wallets = await response.json();
+    zone.innerHTML = "";
 
-        if (!response.ok) {
-            zone.innerHTML = `<p>Erreur : ${wallets.error || "Impossible de charger les wallets"}</p>`;
-            return;
-        }
+    wallets.forEach(w => {
+        zone.innerHTML += `
+            <div class="trajet-card">
+                <h4>${w.nom_utilisateur}</h4>
 
-        if (!wallets.length) {
-            zone.innerHTML = "<p>Aucun wallet trouvé.</p>";
-            return;
-        }
+                <p><strong>Email :</strong> ${w.email}</p>
+                <p><strong>Solde :</strong> ${w.solde_argent}$</p>
 
-        zone.innerHTML = "";
-
-        wallets.forEach(wallet => {
-            const card = document.createElement("div");
-            card.className = "trajet-card";
-
-            card.innerHTML = `
-                <h4>${wallet.nom_utilisateur}</h4>
-                <p><strong>Email :</strong> ${wallet.email}</p>
-                <p><strong>Solde argent :</strong> ${wallet.solde_argent}$</p>
-                <p><strong>Solde points :</strong> ${wallet.solde_points}</p>
                 <div class="home-actions">
-                    <button class="btn secondary" onclick="ajusterWallet(${wallet.id_wallet})">Ajuster le wallet</button>
+                    <button class="btn" onclick="ajusterWallet(${w.id_wallet})">
+                        Ajuster solde
+                    </button>
                 </div>
-            `;
-
-            zone.appendChild(card);
-        });
-    } catch (error) {
-        console.error(error);
-        zone.innerHTML = "<p>Erreur chargement wallets.</p>";
-    }
+            </div>
+        `;
+    });
 }
 
-async function chargerPlaintes() {
-    const zone = document.getElementById("admin-plaintes");
-
-    try {
-        const response = await fetch("/admin/plaintes");
-        const plaintes = await response.json();
-
-        if (!response.ok) {
-            zone.innerHTML = `<p>Erreur : ${plaintes.error || "Impossible de charger les plaintes"}</p>`;
-            return;
-        }
-
-        if (!plaintes.length) {
-            zone.innerHTML = "<p>Aucune plainte trouvée.</p>";
-            return;
-        }
-
-        zone.innerHTML = "";
-
-        plaintes.forEach(plainte => {
-            const card = document.createElement("div");
-            card.className = "trajet-card";
-
-            card.innerHTML = `
-                <h4>${plainte.sujet}</h4>
-                <p><strong>Utilisateur :</strong> ${plainte.nom_utilisateur}</p>
-                <p><strong>Email :</strong> ${plainte.email}</p>
-                <p><strong>Description :</strong> ${plainte.description}</p>
-                <p><strong>Date :</strong> ${plainte.date_plainte}</p>
-                <p><strong>Statut :</strong> ${plainte.statut_plainte}</p>
-                <div class="home-actions">
-                    <button class="btn" onclick="changerStatutPlainte(${plainte.id_plainte}, 'traitee')">Marquer traitée</button>
-                    <button class="btn secondary" onclick="changerStatutPlainte(${plainte.id_plainte}, 'fermee')">Fermer</button>
-                </div>
-            `;
-
-            zone.appendChild(card);
-        });
-    } catch (error) {
-        console.error(error);
-        zone.innerHTML = "<p>Erreur chargement plaintes.</p>";
-    }
+// =============================
+// ACTIONS ADMIN
+// =============================
+async function suspendreUtilisateur(id) {
+    await fetch(`/admin/utilisateur/${id}/suspendre`, { method: "PUT" });
+    chargerUtilisateurs();
 }
 
-async function suspendreUtilisateur(id_utilisateur) {
-    try {
-        const response = await fetch(`/admin/utilisateur/${id_utilisateur}/suspendre`, {
-            method: "PUT"
-        });
-        const result = await response.json();
-
-        if (response.ok) {
-            alert("✅ " + result.message);
-            chargerUtilisateurs();
-            chargerStatsAdmin();
-        } else {
-            alert("❌ " + (result.error || "Erreur"));
-        }
-    } catch (error) {
-        console.error(error);
-        alert("Erreur serveur");
-    }
+async function reactiverUtilisateur(id) {
+    await fetch(`/admin/utilisateur/${id}/reactiver`, { method: "PUT" });
+    chargerUtilisateurs();
 }
 
-async function reactiverUtilisateur(id_utilisateur) {
-    try {
-        const response = await fetch(`/admin/utilisateur/${id_utilisateur}/reactiver`, {
-            method: "PUT"
-        });
-        const result = await response.json();
-
-        if (response.ok) {
-            alert("✅ " + result.message);
-            chargerUtilisateurs();
-            chargerStatsAdmin();
-        } else {
-            alert("❌ " + (result.error || "Erreur"));
-        }
-    } catch (error) {
-        console.error(error);
-        alert("Erreur serveur");
-    }
+async function accepterDemande(id) {
+    await fetch(`/admin/demande/${id}/accepter`, { method: "PUT" });
+    chargerDemandes();
+    chargerUtilisateurs();
 }
 
-async function accepterDemande(id_demande) {
-    try {
-        const response = await fetch(`/admin/demande/${id_demande}/accepter`, {
-            method: "PUT"
-        });
-        const result = await response.json();
-
-        if (response.ok) {
-            alert("✅ " + result.message);
-            chargerDemandes();
-            chargerUtilisateurs();
-            chargerStatsAdmin();
-        } else {
-            alert("❌ " + (result.error || "Erreur"));
-        }
-    } catch (error) {
-        console.error(error);
-        alert("Erreur serveur");
-    }
+async function refuserDemande(id) {
+    const commentaire = prompt("Raison du refus :") || "Refusé";
+    await fetch(`/admin/demande/${id}/refuser`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentaire_admin: commentaire })
+    });
+    chargerDemandes();
 }
 
-async function refuserDemande(id_demande) {
-    const commentaire = prompt("Entre un commentaire de refus :") || "Certification refusée";
-
-    try {
-        const response = await fetch(`/admin/demande/${id_demande}/refuser`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ commentaire_admin: commentaire })
-        });
-        const result = await response.json();
-
-        if (response.ok) {
-            alert("✅ " + result.message);
-            chargerDemandes();
-            chargerStatsAdmin();
-        } else {
-            alert("❌ " + (result.error || "Erreur"));
-        }
-    } catch (error) {
-        console.error(error);
-        alert("Erreur serveur");
-    }
-}
-
+// 💳 AJUSTEMENT WALLET
 async function ajusterWallet(id_wallet) {
-    const montant_argent = prompt("Montant argent à ajouter ou retirer :", "0");
-    const montant_points = prompt("Montant points à ajouter ou retirer :", "0");
-    const description = prompt("Description :", "Ajustement admin") || "Ajustement admin";
+    const montant = prompt("Montant (+ ajouter / - retirer) :");
+    const description = prompt("Description :") || "Ajustement admin";
 
-    try {
-        const response = await fetch(`/admin/wallet/${id_wallet}/ajuster`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                montant_argent: montant_argent,
-                montant_points: montant_points,
-                description: description
-            })
-        });
+    await fetch(`/admin/wallet/${id_wallet}/ajuster`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            montant_argent: montant,
+            montant_points: 0,
+            description: description
+        })
+    });
 
-        const result = await response.json();
-
-        if (response.ok) {
-            alert("✅ " + result.message);
-            chargerWallets();
-        } else {
-            alert("❌ " + (result.error || "Erreur"));
-        }
-    } catch (error) {
-        console.error(error);
-        alert("Erreur serveur");
-    }
+    alert("✅ Wallet mis à jour");
+    chargerWallets();
 }
 
-async function changerStatutPlainte(id_plainte, statut) {
-    try {
-        const response = await fetch(`/admin/plainte/${id_plainte}/statut`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ statut_plainte: statut })
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            alert("✅ " + result.message);
-            chargerPlaintes();
-            chargerStatsAdmin();
-        } else {
-            alert("❌ " + (result.error || "Erreur"));
-        }
-    } catch (error) {
-        console.error(error);
-        alert("Erreur serveur");
-    }
-}
-
+// =============================
+// INIT
+// =============================
 async function initAdmin() {
     const ok = await verifierAdmin();
     if (!ok) return;
@@ -459,9 +365,9 @@ async function initAdmin() {
     await chargerDemandes();
     await chargerTrajetsAdmin();
     await chargerWallets();
-    await chargerPlaintes();
 }
 
 document.addEventListener("DOMContentLoaded", initAdmin);
+
 </script>
 {% endblock %}
