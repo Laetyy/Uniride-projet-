@@ -17,10 +17,10 @@
             <a href="/conducteur-page" class="nav-connected">Publier un trajet</a>
             <a href="/mes-reservations-page" class="nav-connected">Mes réservations</a>
 
-            <!-- 🔥 PROFIL -->
+            <!--  PROFIL -->
             <a href="/profil-page" class="nav-connected nav-profil">Profil</a>
 
-            <!-- 🔥 ADMIN -->
+            <!--  ADMIN -->
             <a href="/admin-page" class="nav-connected nav-admin">Admin</a>
 
             <a href="/login-page" class="nav-disconnected">Connexion</a>
@@ -84,17 +84,17 @@
                     disconnectedLinks.forEach(link => link.style.display = "none");
 
                     if (user.role === "admin") {
-                        // ✅ admin voit admin
+                        //  admin voit admin
                         adminLinks.forEach(link => link.style.display = "inline-block");
 
-                        // ❌ admin ne voit pas profil
+                        //  admin ne voit pas profil
                         profilLinks.forEach(link => link.style.display = "none");
 
                     } else {
-                        // ❌ user normal ne voit pas admin
+                        //  user normal ne voit pas admin
                         adminLinks.forEach(link => link.style.display = "none");
 
-                        // ✅ user voit profil
+                        //  user voit profil
                         profilLinks.forEach(link => link.style.display = "inline-block");
                     }
 

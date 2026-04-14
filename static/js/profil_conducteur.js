@@ -27,7 +27,7 @@ async function chargerProfilConducteur() {
         const avis = data.avis;
 
         const photo = conducteur.photo_profil
-            ? `/${conducteur.photo_profil}`
+            ? `/static/${conducteur.photo_profil}`
             : "/static/images/default-profile.png";
 
         // ===== AVIS =====
