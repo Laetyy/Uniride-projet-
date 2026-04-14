@@ -5,7 +5,7 @@ from flask import Blueprint, request, jsonify, current_app, session
 import pymysql
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from config import get_connection
+from config import get_connection, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -94,7 +94,7 @@ def register():
 
         id_utilisateur = cursor.lastrowid
 
-        # Création automatique du wallet pour chaque nouveau compte
+        # Création automatique du wallet
         cursor.execute("""
             INSERT INTO Wallet (id_utilisateur, solde_argent, solde_points)
             VALUES (%s, 0.00, 0)
@@ -133,6 +133,30 @@ def login():
 
     if not identifiant or not mot_de_passe:
         return jsonify({"error": "Identifiant et mot de passe obligatoires"}), 400
+
+    # =============================
+    # LOGIN ADMIN GLOBAL HARDCODÉ
+    # =============================
+    if identifiant in [ADMIN_USERNAME, ADMIN_EMAIL] and mot_de_passe == ADMIN_PASSWORD:
+        admin_user = {
+            "id_utilisateur": 0,
+            "nom_utilisateur": ADMIN_USERNAME,
+            "nom": "Admin",
+            "prenom": "UniRide",
+            "email": ADMIN_EMAIL,
+            "telephone": "",
+            "bio": "Compte administrateur global du projet UniRide.",
+            "photo_profil": None,
+            "role": "admin",
+            "statut": "actif"
+        }
+
+        session["user"] = admin_user
+
+        return jsonify({
+            "message": "Connexion admin réussie",
+            "user": admin_user
+        }), 200
 
     connection = None
     cursor = None
