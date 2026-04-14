@@ -345,3 +345,49 @@ CREATE TABLE IF NOT EXISTS CarteDebit (
     FOREIGN KEY (id_utilisateur) REFERENCES Utilisateur(id_utilisateur)
 );
 
+-- =============================
+-- ROUTINE RÉSERVATION
+-- =============================
+DELIMITER //
+
+CREATE TRIGGER diminuer_places
+AFTER INSERT ON Reservation
+FOR EACH ROW
+BEGIN
+    UPDATE Trajet
+    SET places_disponibles = places_disponibles - 1
+    WHERE id_trajet = NEW.id_trajet;
+END//
+
+DELIMITER ;
+
+
+-- =============================
+-- ROUTINE NOTE CONDUCTEUR
+-- =============================
+DELIMITER //
+
+CREATE TRIGGER update_moyenne_conducteur
+AFTER INSERT ON Evaluation
+FOR EACH ROW
+BEGIN
+    UPDATE Utilisateur u
+    SET u.bio = u.bio  -- (juste pour forcer update si besoin)
+    WHERE u.id_utilisateur = NEW.id_conducteur;
+END//
+
+DELIMITER ;
+
+
+-- INDEX UTILISATEUR
+CREATE INDEX idx_user_email ON Utilisateur(email);
+CREATE INDEX idx_user_username ON Utilisateur(nom_utilisateur);
+
+-- INDEX TRAJET
+CREATE INDEX idx_trajet_villes ON Trajet(id_ville_depart, id_ville_arrivee);
+
+-- INDEX MESSAGE
+CREATE INDEX idx_message_conversation ON Message(id_conversation);
+
+-- INDEX RESERVATION
+CREATE INDEX idx_reservation_trajet ON Reservation(id_trajet);
