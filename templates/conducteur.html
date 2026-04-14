@@ -19,9 +19,24 @@ function renderNotConnected() {
     `;
 }
 
-function renderBecomeDriver() {
+function renderBecomeDriver(refusInfo = null) {
+    let refusBlock = "";
+
+    if (refusInfo) {
+        refusBlock = `
+            <div class="notice-box" style="margin-bottom: 20px;">
+                <h3>Demande refusée</h3>
+                <p><strong>Statut :</strong> refusee</p>
+                <p><strong>Commentaire admin :</strong> ${refusInfo.commentaire_admin || "Aucun commentaire"}</p>
+                <p>Vous pouvez corriger vos informations et envoyer une nouvelle demande.</p>
+            </div>
+        `;
+    }
+
     container.innerHTML = `
         <div class="dashboard-card">
+            ${refusBlock}
+
             <h3>Devenir conducteur</h3>
             <p>Commencez par remplir les informations du véhicule.</p>
 
@@ -147,28 +162,9 @@ async function renderPendingDriver() {
                 <p><strong>Type d'identité :</strong> ${result.type_identite || ""}</p>
                 <p><strong>Numéro identité :</strong> ${result.numero_identite || ""}</p>
                 <p><strong>Expiration identité :</strong> ${result.date_expiration_identite || ""}</p>
-
-                <button class="btn" id="simulateAccept">Simuler validation admin</button>
+                <p><strong>Commentaire admin :</strong> ${result.commentaire_admin || "En attente de traitement"}</p>
             </div>
         `;
-
-        document.getElementById("simulateAccept").addEventListener("click", async function () {
-            const res = await fetch(`/conducteur/simuler-validation/${user.id_utilisateur}`, {
-                method: "POST"
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                user.role = "conducteur";
-                localStorage.setItem("user", JSON.stringify(user));
-                alert("✅ Conducteur validé");
-                renderDriverDashboard();
-            } else {
-                alert("❌ " + (data.error || "Erreur"));
-            }
-        });
-
     } catch (error) {
         console.error(error);
         container.innerHTML = "<p>Erreur lors du chargement du statut.</p>";
@@ -614,8 +610,10 @@ async function initConducteurPage() {
         const response = await fetch(`/conducteur/statut/${user.id_utilisateur}`);
         const result = await response.json();
 
-        if (result.statut === "en_attente" || result.statut === "refusee") {
+        if (result.statut === "en_attente") {
             renderPendingDriver();
+        } else if (result.statut === "refusee") {
+            renderBecomeDriver(result);
         } else if (result.statut === "acceptee") {
             user.role = "conducteur";
             localStorage.setItem("user", JSON.stringify(user));
@@ -630,7 +628,6 @@ async function initConducteurPage() {
 }
 
 initConducteurPage();
-
 
 function ouvrirChat(id_trajet) {
     window.location.href = `/conversation-page?trajet=${id_trajet}`;

@@ -186,44 +186,6 @@ def statut_conducteur(id_utilisateur):
             connection.close()
 
 
-@conducteur_bp.route("/conducteur/simuler-validation/<int:id_utilisateur>", methods=["POST"])
-def simuler_validation(id_utilisateur):
-    connection = None
-    cursor = None
-
-    try:
-        connection = get_connection()
-        cursor = connection.cursor()
-        connection.begin()
-
-        cursor.execute("""
-            UPDATE DemandeCertification
-            SET statut_demande = 'acceptee', commentaire_admin = 'Validation simulée'
-            WHERE id_utilisateur = %s
-        """, (id_utilisateur,))
-
-        cursor.execute("""
-            UPDATE Utilisateur
-            SET role = 'conducteur'
-            WHERE id_utilisateur = %s
-        """, (id_utilisateur,))
-
-        connection.commit()
-
-        return jsonify({"message": "Conducteur validé avec succès"}), 200
-
-    except Exception as e:
-        if connection:
-            connection.rollback()
-        return jsonify({"error": str(e)}), 500
-
-    finally:
-        if cursor:
-            cursor.close()
-        if connection:
-            connection.close()
-
-
 @conducteur_bp.route("/conducteur/trajets/<int:id_utilisateur>", methods=["GET"])
 def get_trajets_conducteur(id_utilisateur):
     connection = None
