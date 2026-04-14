@@ -583,6 +583,11 @@ async function chargerReservationsConducteur() {
                 <p><strong>Places réservées :</strong> ${reservation.nb_places}</p>
                 <p><strong>Statut réservation :</strong> ${reservation.statut}</p>
                 <p><strong>Statut trajet :</strong> ${reservation.statut_trajet}</p>
+                <div class="home-actions">
+                    <button class="btn" onclick="ouvrirChat(${reservation.id_trajet})">
+                        💬 Contacter
+                    </button>
+                </div>
             `;
 
             zone.appendChild(card);
@@ -625,5 +630,10 @@ async function initConducteurPage() {
 }
 
 initConducteurPage();
+
+
+function ouvrirChat(id_trajet) {
+    window.location.href = `/conversation-page?trajet=${id_trajet}`;
+}
 </script>
 {% endblock %}
