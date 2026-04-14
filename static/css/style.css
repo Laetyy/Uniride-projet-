@@ -1443,3 +1443,118 @@ textarea:focus {
 .dot.orange {
     background: #fb8c00;
 }
+
+
+/* ===== NOTIFICATION MESSAGES ===== */
+.message-btn {
+    position: relative;
+}
+
+.message-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #ff3b30;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    box-shadow: 0 6px 16px rgba(255, 59, 48, 0.28);
+    line-height: 1;
+}
+
+/* ===== CHAT ===== */
+.chat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    min-height: 320px;
+    max-height: 520px;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+}
+
+.chat-input-row {
+    margin-top: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.chat-input-row input {
+    flex: 1;
+}
+
+.message-row {
+    display: flex;
+    margin-bottom: 12px;
+}
+
+.message-row.mine {
+    justify-content: flex-end;
+}
+
+.message-row.theirs {
+    justify-content: flex-start;
+}
+
+.message-bubble {
+    max-width: 72%;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: #f5fbff;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 14px rgba(17, 44, 82, 0.05);
+}
+
+.message-row.mine .message-bubble {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.message-row.mine .message-author {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.message-author {
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    color: var(--primary);
+}
+
+@media (max-width: 768px) {
+    .chat-input-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .message-bubble {
+        max-width: 88%;
+    }
+}
+
+/* ===== STATUS MESSAGE (LU / ENVOYÉ) ===== */
+.message-status {
+    font-size: 11px;
+    margin-top: 6px;
+    opacity: 0.8;
+    text-align: right;
+}
+
+.message-row.mine .message-status {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.message-row.theirs .message-status {
+    color: var(--muted);
+}
