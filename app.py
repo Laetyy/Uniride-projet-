@@ -97,6 +97,10 @@ def admin_page_redirect():
 def wallet_page():
     return flask.render_template("wallet.html")
 
+@app.route("/conversation-page")
+def conversation_page():
+    return flask.render_template("conversation.html")
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

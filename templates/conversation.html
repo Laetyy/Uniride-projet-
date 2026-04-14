@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>💬 Conversation</h2>
+
+<div id="chat-box" style="background:white; padding:15px; border-radius:10px; min-height:300px;"></div>
+
+<div style="margin-top:10px;">
+    <input type="text" id="message-input" placeholder="Écrire un message..." style="width:70%;">
+    <button class="btn" onclick="envoyerMessage()">Envoyer</button>
+</div>
+
+<script>
+const user = JSON.parse(localStorage.getItem("user"));
+const urlParams = new URLSearchParams(window.location.search);
+const trajetId = urlParams.get("trajet");
+
+let conversationId = null;
+
+async function chargerConversation() {
+    const res = await fetch(`/conversation/${trajetId}`);
+    const data = await res.json();
+
+    conversationId = data.id_conversation;
+    chargerMessages();
+}
+
+async function chargerMessages() {
+    const res = await fetch(`/messages/${conversationId}`);
+    const messages = await res.json();
+
+    const box = document.getElementById("chat-box");
+    box.innerHTML = "";
+
+    messages.forEach(m => {
+        box.innerHTML += `
+            <p><strong>${m.auteur}:</strong> ${m.contenu}</p>
+        `;
+    });
+}
+
+async function envoyerMessage() {
+    const contenu = document.getElementById("message-input").value;
+
+    await fetch("/message", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            id_conversation: conversationId,
+            id_expediteur: user.id_utilisateur,
+            contenu: contenu
+        })
+    });
+
+    document.getElementById("message-input").value = "";
+    chargerMessages();
+}
+
+async function initChat() {
+    await chargerConversation();
+    chargerMessages();
+}
+
+initChat();
+</script>
+
+{% endblock %}

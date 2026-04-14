@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import pymysql
 from config import get_connection
+from flask import session 
 
 trajets_bp = Blueprint("trajets", __name__)
 
@@ -171,3 +172,84 @@ def create_trajet():
             cursor.close()
         if connection:
             connection.close()
+
+@trajets_bp.route("/conversation/<int:id_trajet>")
+def get_or_create_conversation(id_trajet):
+    user = session.get("user")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # 1. vérifier si conversation existe
+    cursor.execute("""
+        SELECT id_conversation FROM Conversation
+        WHERE id_trajet = %s
+    """, (id_trajet,))
+    
+    conv = cursor.fetchone()
+
+    if conv:
+        return jsonify(conv)
+
+    # 2. récupérer conducteur + passager
+    cursor.execute("""
+        SELECT t.id_conducteur, r.id_passager
+        FROM Trajet t
+        JOIN Reservation r ON r.id_trajet = t.id_trajet
+        WHERE t.id_trajet = %s
+        LIMIT 1
+    """, (id_trajet,))
+    
+    data = cursor.fetchone()
+
+    if not data:
+        return jsonify({"error": "Impossible de créer conversation"}), 400
+
+    # 3. créer conversation
+    cursor.execute("""
+        INSERT INTO Conversation (id_trajet, id_conducteur, id_passager)
+        VALUES (%s, %s, %s)
+    """, (
+        id_trajet,
+        data["id_conducteur"],
+        data["id_passager"]
+    ))
+
+    conn.commit()
+
+    return jsonify({"id_conversation": cursor.lastrowid})
+
+@trajets_bp.route("/messages/<int:id_conversation>")
+def get_messages(id_conversation):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT m.contenu, u.nom_utilisateur as auteur
+        FROM Message m
+        JOIN Utilisateur u ON m.id_expediteur = u.id_utilisateur
+        WHERE m.id_conversation = %s
+        ORDER BY m.date_envoi
+    """, (id_conversation,))
+
+    return jsonify(cursor.fetchall())
+
+@trajets_bp.route("/message", methods=["POST"])
+def send_message():
+    data = request.get_json()
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO Message (id_conversation, id_expediteur, contenu)
+        VALUES (%s, %s, %s)
+    """, (
+        data["id_conversation"],
+        data["id_expediteur"],
+        data["contenu"]
+    ))
+
+    conn.commit()
+
+    return jsonify({"ok": True})
